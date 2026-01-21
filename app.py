@@ -1,251 +1,192 @@
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
+import time
 
-# --- 1. CONFIGURATION & STATE MANAGEMENT ---
+# --- 1. CONFIGURATION ---
 st.set_page_config(
     page_title="Sustainability Fashion App",
     page_icon="🌿",
-    layout="centered", # Centered mimics a mobile app view
-    initial_sidebar_state="collapsed"
+    layout="centered",
+    initial_sidebar_state="expanded"
 )
 
-# Initialize Session State for "Routing" (Navigation)
-if 'page' not in st.session_state:
-    st.session_state.page = 'home'
-
-def navigate_to(page_name):
-    st.session_state.page = page_name
-    st.rerun()
-
-# --- 2. CUSTOM STYLING (CSS) ---
-# We inject CSS to mimic the Tailwind Design System from your HTML
+# --- 2. CSS STYLING (Tweaked for Streamlit Native Feel) ---
 st.markdown("""
     <style>
-        /* Import Fonts */
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&family=Noto+Sans:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap');
         
-        /* General App Styling */
-        .stApp {
-            background-color: #f9f9f6; /* background-light */
+        /* Apply font globally */
+        html, body, [class*="css"] {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            color: #131614;
         }
         
-        /* Hide Standard Streamlit Elements for App-like feel */
-        #MainMenu {visibility: hidden;}
-        header {visibility: hidden;}
-        footer {visibility: hidden;}
-        
-        /* Custom Colors based on your HTML */
-        :root {
-            --primary: #496e57;
-            --secondary: #7FBABF;
-            --accent: #D58C6A;
-            --card-bg: #F3F5F1;
+        /* Custom Primary Color Highlight */
+        .stMetricValue {
+            color: #496e57 !important;
         }
-
-        /* Card Styling */
-        div[data-testid="stMetric"], div.stButton > button {
-            background-color: white;
+        
+        /* Clean up the camera input look */
+        div[data-testid="stCameraInput"] {
             border-radius: 1rem;
-            box-shadow: 0 4px 20px -2px rgba(73, 110, 87, 0.05);
-            border: 1px solid #e5e7eb;
-        }
-
-        /* Primary Button Styling */
-        div.stButton > button {
-            width: 100%;
-            border: none;
-            color: var(--primary);
-            font-weight: 700;
-        }
-        div.stButton > button:hover {
-            color: #3a5745;
-            background-color: #f0fdf4;
-        }
-
-        /* Navigation Bar Styling */
-        .nav-container {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: white;
-            padding: 10px;
-            border-top: 1px solid #ddd;
-            z-index: 999;
-            text-align: center;
+            overflow: hidden;
+            border: 2px solid #496e57;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. HELPER COMPONENTS ---
+# --- 3. HELPER FUNCTIONS ---
 
 def display_gauge(score):
-    """Creates the Eco-Score gauge using Plotly"""
+    """Interactive Plotly Gauge"""
     fig = go.Figure(go.Indicator(
         mode = "gauge+number",
         value = score,
         domain = {'x': [0, 1], 'y': [0, 1]},
-        title = {'text': "Eco-Score", 'font': {'size': 14, 'color': "#6a7c71"}},
-        number = {'font': {'size': 50, 'color': "#131614", 'family': "Plus Jakarta Sans"}},
+        title = {'text': "Eco-Score", 'font': {'size': 20, 'color': "#496e57"}},
         gauge = {
-            'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "white"},
-            'bar': {'color': "#496e57"}, # Primary Green
+            'axis': {'range': [None, 100]},
+            'bar': {'color': "#496e57"},
             'bgcolor': "white",
             'borderwidth': 2,
             'bordercolor': "#f9f9f6",
             'steps': [
-                {'range': [0, 100], 'color': '#e2e8f0'}
+                {'range': [0, 50], 'color': '#fee2e2'}, # Red tint
+                {'range': [50, 80], 'color': '#fef3c7'}, # Yellow tint
+                {'range': [80, 100], 'color': '#dcfce7'} # Green tint
             ],
         }
     ))
-    fig.update_layout(
-        paper_bgcolor = "rgba(0,0,0,0)",
-        plot_bgcolor = "rgba(0,0,0,0)",
-        font = {'family': "Plus Jakarta Sans"},
-        margin=dict(l=20, r=20, t=30, b=20),
-        height=200
-    )
+    fig.update_layout(height=250, margin=dict(l=20, r=20, t=50, b=20))
     return fig
 
-# --- 4. PAGE VIEWS ---
+# --- 4. NAVIGATION (SIDEBAR) ---
+# Streamlit works best when navigation is in the sidebar
+with st.sidebar:
+    st.image("https://ui-avatars.com/api/?name=Jessica&background=496e57&color=fff&rounded=true", width=80)
+    st.title("GreenStyle")
+    
+    # Navigation Logic
+    selected_page = st.radio(
+        "Navigate", 
+        ["Home", "Scan Item", "My Profile"], 
+        index=0 if 'page' not in st.session_state else ["Home", "Scan Item", "My Profile"].index(st.session_state.get('last_page', 'Home'))
+    )
 
-def home_page():
-    # -- Header --
-    col1, col2 = st.columns([1, 4])
+# --- 5. PAGE LOGIC ---
+
+if selected_page == "Home":
+    st.session_state.last_page = "Home"
+    
+    # Hero Section
+    st.title("Good Morning, Jessica 🌿")
+    st.markdown("Your sustainability score is **Top 10%** this week!")
+    
+    # Search with visual feedback
+    search_query = st.text_input("🔍 Find brands...", placeholder="Type 'Patagonia' or 'Denim'...")
+    if search_query:
+        st.success(f"Searching database for '{search_query}'...")
+
+    st.divider()
+
+    # Call to Action (The "Awesome" Transition)
+    col1, col2 = st.columns([2, 1])
     with col1:
-        st.image("https://ui-avatars.com/api/?name=Jessica&background=496e57&color=fff&rounded=true", width=50)
+        st.markdown("### Ready to check a new item?")
+        st.write("Scan tags to instantly see water usage, carbon footprint, and labor ethics.")
     with col2:
-        st.markdown("### Good Morning, \n# **Jessica**", unsafe_allow_html=True)
-    
-    st.markdown("---")
-    
-    # -- Search --
-    st.text_input("🔍 Search brands or materials...", placeholder="Try 'Organic Cotton'...")
-    
-    st.write("") # Spacer
+        # A large primary button that directs users to the Scan page
+        # Note: In Streamlit, buttons can't directly change the radio selection easily without rerun hacks,
+        # so we rely on the Sidebar for main nav, but this button adds visual CTA.
+        st.info("👈 Use the Sidebar to Scan!")
 
-    # -- Hero Section (Scan Trigger) --
-    with st.container():
-        st.markdown(
-            """
-            <div style="background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1576995853123-5a2946b92885?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'); 
-            background-size: cover; padding: 2rem; border-radius: 1.5rem; color: white; margin-bottom: 20px;">
-                <h2>📷 Scan a tag</h2>
-                <p>Instantly analyze fabric composition and eco-impact.</p>
-            </div>
-            """, unsafe_allow_html=True
-        )
-        # We use a Streamlit button to handle the click event logic
-        if st.button("Scan Item Now ➔", type="primary"):
-            navigate_to('score')
+    # Native Streamlit 'Metric' Cards
+    st.subheader("Your Impact Stats")
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Items Scanned", "42", "+3")
+    m2.metric("Water Saved", "1.2k L", "+150L")
+    m3.metric("Trees Planted", "5", "Goal: 10")
 
-    st.write("") # Spacer
-
-    # -- Carousel / Tips --
-    st.subheader("Daily Green Tips")
-    col_tip1, col_tip2 = st.columns(2)
-    
-    with col_tip1:
+    # Expandable Tips (Cleaner UI)
+    with st.expander("💡 Daily Green Tip: Denim Care"):
         st.image("https://images.unsplash.com/photo-1542272617-0858607c2242", use_container_width=True)
-        st.caption("**Wash Less**\n\nAir denim out to save water.")
+        st.write("""
+        **Wash Less, Air More.**
+        Washing denim too frequently breaks down fibers and wastes water. 
+        Try hanging them in a breezy spot or freezing them to kill bacteria!
+        """)
         
 
-    with col_tip2:
-        st.image("https://images.unsplash.com/photo-1509631179647-0177331693ae", use_container_width=True)
-        st.caption("**Polyester?**\n\nTakes 200 years to decompose.")
+elif selected_page == "Scan Item":
+    st.session_state.last_page = "Scan Item"
+    st.title("Scan Tag 📷")
+    st.write("Align the clothing label within the frame below.")
 
-    # -- Recent Activity --
-    st.subheader("Recent Scans")
-    with st.container():
-        col_rec1, col_rec2 = st.columns([1, 3])
-        with col_rec1:
-            st.image("https://images.unsplash.com/photo-1521572163474-6864f9cf17ab", width=60)
-        with col_rec2:
-            st.markdown("**Organic Cotton Tee**")
-            st.caption("Scanned 2 hours ago • Grade A+")
+    # AWESOME FEATURE 1: Real Camera Input
+    img_file_buffer = st.camera_input("Take a picture")
 
-def score_page():
-    # -- Top Bar --
-    col_back, col_title = st.columns([1, 5])
-    with col_back:
-        if st.button("⬅"):
-            navigate_to('home')
-    with col_title:
-        st.subheader("Impact Analysis")
-
-    # -- Item Mini Card --
-    with st.container():
-        col_img, col_desc = st.columns([1, 3])
-        with col_img:
-            st.image("https://images.unsplash.com/photo-1542272454315-4c01d7abdf4a", width=60)
-        with col_desc:
-            st.markdown("**Levi's 501 Original Fit**")
-            st.caption("Denim • 100% Cotton • ✅ Verified")
-
-    # -- Main Score Gauge --
-    st.plotly_chart(display_gauge(78), use_container_width=True)
-    
-    st.info("This item scores better than **82%** of similar denim products scanned this month.")
-    
-
-    # -- Grid Breakdown --
-    st.markdown("### Impact Breakdown")
-    
-    row1_1, row1_2 = st.columns(2)
-    with row1_1:
-        st.metric(label="Material", value="A", delta="Low Impact")
-        st.caption("Organic Cotton")
-    with row1_2:
-        st.metric(label="Water Usage", value="C-", delta="-High Use", delta_color="inverse")
-        st.caption("Needs Improvement")
+    if img_file_buffer is not None:
+        # AWESOME FEATURE 2: Toast Notification
+        st.toast("Processing Image...", icon="🔄")
+        time.sleep(1.5) # Simulate processing
+        st.toast("Scan Complete!", icon="✅")
         
-    row2_1, row2_2 = st.columns(2)
-    with row2_1:
-        st.metric(label="Labor Ethics", value="A+", delta="Certified")
-        st.caption("Fair Trade")
-    with row2_2:
-        st.metric(label="Transport", value="B", delta="Average", delta_color="off")
-        st.caption("Regional Hub")
+        st.divider()
+        
+        # Results Section
+        st.subheader("Analysis Results")
+        
+        col_res1, col_res2 = st.columns([1, 1])
+        
+        with col_res1:
+            st.image(img_file_buffer, caption="Captured Image", width=200)
+            
+        with col_res2:
+            st.markdown("### Levi's 501 Original")
+            st.caption("100% Organic Cotton")
+            
+            # AWESOME FEATURE 3: Balloons on high score
+            score = 78
+            st.plotly_chart(display_gauge(score), use_container_width=True)
+            if score > 75:
+                st.balloons()
+                st.success("Excellent Choice! This item is eco-friendly.")
 
-    st.write("")
+        # AWESOME FEATURE 4: Native Progress Bars for breakdown
+        st.subheader("Detailed Breakdown")
+        
+        st.write("**Material Health** (A)")
+        st.progress(90)
+        
+        st.write("**Water Usage** (C-)")
+        st.progress(40)
+        
+        st.write("**Labor Standards** (A+)")
+        st.progress(95)
+        
+        st.info("This brand is a member of the **Better Cotton Initiative**.")
+        
+
+elif selected_page == "My Profile":
+    st.session_state.last_page = "My Profile"
+    st.title("Jessica's Profile")
     
-    # -- Trend Chart --
-    st.markdown("### Brand Trend (5 Years)")
-    chart_data = pd.DataFrame({
-        'Year': ['2020', '2021', '2022', '2023', '2024'],
-        'Score': [65, 68, 72, 75, 78]
-    })
-    st.line_chart(chart_data, x='Year', y='Score', color="#496e57")
+    # Interactive Tab Interface
+    tab1, tab2, tab3 = st.tabs(["History", "Settings", "Badges"])
+    
+    with tab1:
+        st.dataframe(pd.DataFrame({
+            "Item": ["Denim Jacket", "Cotton Tee", "Sneakers"],
+            "Date": ["2023-10-01", "2023-10-05", "2023-10-12"],
+            "Score": [85, 92, 65]
+        }), use_container_width=True)
+        
+    with tab2:
+        st.toggle("Dark Mode Support", value=True)
+        st.toggle("Notifications", value=False)
+        st.slider("Daily Goal (Scans)", 1, 10, 3)
 
-# --- 5. MAIN APP LOGIC ---
-
-if st.session_state.page == 'home':
-    home_page()
-elif st.session_state.page == 'score':
-    score_page()
-elif st.session_state.page == 'points':
-    st.title("Points Page")
-    st.write("Placeholder for points logic.")
-    if st.button("Back Home"): navigate_to('home')
-elif st.session_state.page == 'profile':
-    st.title("Profile Page")
-    st.write("Placeholder for profile settings.")
-    if st.button("Back Home"): navigate_to('home')
-
-# --- 6. SIMULATED BOTTOM NAVIGATION ---
-# Since Streamlit doesn't support fixed bottom navbars natively, 
-# we inject buttons at the bottom of the script.
-st.markdown("---")
-nav_cols = st.columns(4)
-
-if nav_cols[0].button("🏠\nHome"):
-    navigate_to('home')
-if nav_cols[1].button("📷\nScan"):
-    navigate_to('score')
-if nav_cols[2].button("💎\nPoints"):
-    navigate_to('points')
-if nav_cols[3].button("👤\nProfile"):
-    navigate_to('profile')
+    with tab3:
+        col_b1, col_b2, col_b3 = st.columns(3)
+        col_b1.image("https://cdn-icons-png.flaticon.com/512/3209/3209265.png", width=80, caption="Earth Guardian")
+        col_b2.image("https://cdn-icons-png.flaticon.com/512/3209/3209238.png", width=80, caption="Water Saver")
