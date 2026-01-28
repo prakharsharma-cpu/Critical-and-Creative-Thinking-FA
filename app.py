@@ -1,9 +1,6 @@
 import streamlit as st
 import plotly.graph_objects as go
 import time
-from PIL import Image
-from pyzbar.pyzbar import decode
-import io
 
 # -------------------------------------------------
 # CONFIG
@@ -41,11 +38,6 @@ html, body, [class*="css"] {
     box-shadow: 0px 8px 24px rgba(0,0,0,0.05);
     margin-bottom: 16px;
 }
-
-.primary {
-    color: #496e57;
-    font-weight: 700;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -75,13 +67,13 @@ def eco_gauge(score):
 # -------------------------------------------------
 if not st.session_state.onboarded:
     st.title("Welcome to GreenStyle 🌿")
-    st.subheader("Scan fashion. Make better choices. Earn rewards.")
+    st.subheader("Scan fashion. Make sustainable choices.")
 
     st.markdown("""
     <div class="card">
-    ✔ AI-powered sustainability scan<br>
+    ✔ QR-based product identification<br>
     ✔ Instant Eco-Score & Grade<br>
-    ✔ Rewards for responsible fashion
+    ✔ Earn rewards for sustainability
     </div>
     """, unsafe_allow_html=True)
 
@@ -101,7 +93,7 @@ page = st.radio(
 )
 
 # -------------------------------------------------
-# SCREEN 2 — HOME
+# HOME
 # -------------------------------------------------
 if page == "🏠 Home":
     st.title("Good Morning 🌱")
@@ -111,48 +103,34 @@ if page == "🏠 Home":
     c2.metric("Water Saved", "1.2k L")
     c3.metric("Eco Points", st.session_state.eco_points)
 
-    st.markdown("""
-    <div class="card">
-    💡 <b>Tip:</b> Cold-wash clothes to save energy and fabric life.
-    </div>
-    """, unsafe_allow_html=True)
-
 # -------------------------------------------------
-# SCREEN 3 — REAL-TIME QR SCANNER
+# QR SCANNER (CLOUD SAFE)
 # -------------------------------------------------
 elif page == "📦 QR Scanner":
     st.title("QR Product Scanner")
 
-    uploaded = st.file_uploader(
-        "Upload or scan a QR code",
-        type=["png", "jpg", "jpeg"]
+    st.write("Scan the QR code on the product tag and paste the code below.")
+
+    qr_value = st.text_input(
+        "Paste QR Code / Product URL / Product ID",
+        placeholder="e.g. https://brand.com/product/501"
     )
 
-    if uploaded:
-        st.toast("Scanning QR Code…", icon="🔍")
-        time.sleep(1)
+    if qr_value:
+        st.toast("Product Identified", icon="✅")
+        time.sleep(0.5)
 
-        image = Image.open(io.BytesIO(uploaded.read()))
-        st.image(image, width=220)
+        st.markdown("### Levi’s 501 – Organic Cotton")
 
-        decoded = decode(image)
+        score = 88
+        st.plotly_chart(eco_gauge(score), use_container_width=True)
 
-        if decoded:
-            st.toast("Product Identified!", icon="✅")
-
-            st.markdown("### Levi’s 501 – Organic Cotton")
-
-            score = 88
-            st.plotly_chart(eco_gauge(score), use_container_width=True)
-
-            st.success("🌿 Grade A Sustainable Product")
-            st.session_state.eco_points += 10
-            st.balloons()
-        else:
-            st.error("QR not detected. Please try a clearer image.")
+        st.success("🌿 Grade A Sustainable Product")
+        st.session_state.eco_points += 10
+        st.balloons()
 
 # -------------------------------------------------
-# SCREEN 4 — ECO-SCORE CARD
+# ECO SCORE CARD
 # -------------------------------------------------
 elif page == "🌿 Eco-Score":
     st.title("Eco-Score Card")
@@ -166,7 +144,7 @@ elif page == "🌿 Eco-Score":
     st.progress(90, text="Labor Ethics – A+")
 
 # -------------------------------------------------
-# SCREEN 5 — REWARDS STORE
+# REWARDS STORE
 # -------------------------------------------------
 elif page == "🎁 Rewards":
     st.title("Rewards Store")
