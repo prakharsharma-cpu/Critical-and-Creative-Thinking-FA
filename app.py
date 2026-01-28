@@ -18,10 +18,13 @@ if "onboarded" not in st.session_state:
     st.session_state.onboarded = False
 
 if "eco_points" not in st.session_state:
-    st.session_state.eco_points = 100
+    st.session_state.eco_points = 120
+
+if "last_scan" not in st.session_state:
+    st.session_state.last_scan = False
 
 # -------------------------------------------------
-# GLOBAL CSS (Figma-friendly)
+# GLOBAL CSS (APP-LIKE UI)
 # -------------------------------------------------
 st.markdown("""
 <style>
@@ -33,10 +36,31 @@ html, body, [class*="css"] {
 
 .card {
     background: #F9FBF9;
-    padding: 20px;
-    border-radius: 16px;
-    box-shadow: 0px 8px 24px rgba(0,0,0,0.05);
-    margin-bottom: 16px;
+    padding: 22px;
+    border-radius: 18px;
+    box-shadow: 0px 10px 30px rgba(0,0,0,0.06);
+    margin-bottom: 18px;
+}
+
+.scan-box {
+    border: 2px dashed #496e57;
+    border-radius: 18px;
+    padding: 26px;
+    text-align: center;
+    background: #ffffff;
+}
+
+.grade-a {
+    background: #dcfce7;
+    color: #166534;
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+    display: inline-block;
+}
+
+.muted {
+    color: #6b7280;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -63,92 +87,114 @@ def eco_gauge(score):
     return fig
 
 # -------------------------------------------------
-# SCREEN 1 — ONBOARDING
+# SCREEN 1 — ONBOARDING (STRONG FIRST IMPRESSION)
 # -------------------------------------------------
 if not st.session_state.onboarded:
-    st.title("Welcome to GreenStyle 🌿")
-    st.subheader("Scan fashion. Make sustainable choices.")
+    st.title("GreenStyle 🌿")
+    st.subheader("Make fashion choices that matter")
 
     st.markdown("""
     <div class="card">
-    ✔ QR-based product identification<br>
-    ✔ Instant Eco-Score & Grade<br>
-    ✔ Earn rewards for sustainability
+    <b>How it works</b><br><br>
+    ① Scan product QR<br>
+    ② Get Eco-Score instantly<br>
+    ③ Earn rewards for sustainable choices
     </div>
     """, unsafe_allow_html=True)
 
-    if st.button("Start My Journey →", use_container_width=True):
+    if st.button("Start Scanning →", use_container_width=True):
         st.session_state.onboarded = True
         st.rerun()
 
     st.stop()
 
 # -------------------------------------------------
-# NAVIGATION
+# NAVIGATION (SIMPLE & CLEAR)
 # -------------------------------------------------
 page = st.radio(
-    "Navigation",
-    ["🏠 Home", "📦 QR Scanner", "🌿 Eco-Score", "🎁 Rewards"],
+    "",
+    ["🏠 Home", "📦 Scan", "🌿 Impact", "🎁 Rewards"],
     horizontal=True
 )
 
 # -------------------------------------------------
-# HOME
+# HOME — GUIDED DASHBOARD
 # -------------------------------------------------
 if page == "🏠 Home":
-    st.title("Good Morning 🌱")
+    st.title("Your Sustainability Dashboard")
 
     c1, c2, c3 = st.columns(3)
     c1.metric("Items Scanned", "42")
     c2.metric("Water Saved", "1.2k L")
     c3.metric("Eco Points", st.session_state.eco_points)
 
-# -------------------------------------------------
-# QR SCANNER (CLOUD SAFE)
-# -------------------------------------------------
-elif page == "📦 QR Scanner":
-    st.title("QR Product Scanner")
+    st.markdown("""
+    <div class="card">
+    💡 <b>Next best action:</b><br>
+    Scan your next clothing item to earn more Eco Points.
+    </div>
+    """, unsafe_allow_html=True)
 
-    st.write("Scan the QR code on the product tag and paste the code below.")
+# -------------------------------------------------
+# SCAN — INTUITIVE QR EXPERIENCE
+# -------------------------------------------------
+elif page == "📦 Scan":
+    st.title("Scan Product QR")
+
+    st.markdown("""
+    <div class="scan-box">
+    📷 Scan the QR code on the clothing tag<br>
+    <span class="muted">Paste the product link or ID below</span>
+    </div>
+    """, unsafe_allow_html=True)
 
     qr_value = st.text_input(
-        "Paste QR Code / Product URL / Product ID",
+        "",
         placeholder="e.g. https://brand.com/product/501"
     )
 
     if qr_value:
-        st.toast("Product Identified", icon="✅")
-        time.sleep(0.5)
+        st.toast("Scanning product…", icon="🔍")
+        time.sleep(1)
+
+        st.session_state.last_scan = True
+        st.session_state.eco_points += 10
 
         st.markdown("### Levi’s 501 – Organic Cotton")
+        st.markdown("<span class='grade-a'>Grade A · Sustainable</span>", unsafe_allow_html=True)
 
-        score = 88
-        st.plotly_chart(eco_gauge(score), use_container_width=True)
+        st.plotly_chart(eco_gauge(88), use_container_width=True)
 
-        st.success("🌿 Grade A Sustainable Product")
-        st.session_state.eco_points += 10
+        st.success("You earned +10 Eco Points 🌱")
         st.balloons()
 
 # -------------------------------------------------
-# ECO SCORE CARD
+# IMPACT — FEELS MEANINGFUL
 # -------------------------------------------------
-elif page == "🌿 Eco-Score":
-    st.title("Eco-Score Card")
-
-    st.metric("Overall Grade", "A+")
+elif page == "🌿 Impact":
+    st.title("Your Environmental Impact")
 
     st.plotly_chart(eco_gauge(92), use_container_width=True)
 
     st.progress(95, text="Material Health – A+")
-    st.progress(88, text="Water Usage – A")
-    st.progress(90, text="Labor Ethics – A+")
+    st.progress(88, text="Water Efficiency – A")
+    st.progress(90, text="Ethical Labour – A+")
+
+    st.info("Certified by global sustainability standards")
 
 # -------------------------------------------------
-# REWARDS STORE
+# REWARDS — MOTIVATING, NOT BORING
 # -------------------------------------------------
 elif page == "🎁 Rewards":
     st.title("Rewards Store")
-    st.write(f"Eco Points: **{st.session_state.eco_points}**")
+    st.write(f"🌱 Eco Points: **{st.session_state.eco_points}**")
+
+    st.markdown("""
+    <div class="card">
+    🎯 <b>Next reward at 150 points</b><br>
+    Keep scanning sustainable products to unlock it.
+    </div>
+    """, unsafe_allow_html=True)
 
     r1, r2, r3 = st.columns(3)
 
