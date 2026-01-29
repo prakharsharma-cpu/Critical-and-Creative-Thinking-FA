@@ -1,211 +1,122 @@
 import streamlit as st
-import plotly.graph_objects as go
 import time
 
-# -------------------------------------------------
-# CONFIG
-# -------------------------------------------------
-st.set_page_config(
-    page_title="GreenStyle",
-    page_icon="🌿",
-    layout="centered"
-)
+# --- 1. SETTING THE UX STAGE (80% UX Structure) ---
+st.set_page_config(page_title="SustainStyle Prototype", page_icon="🌿", layout="centered")
 
-# -------------------------------------------------
-# SESSION STATE
-# -------------------------------------------------
-if "onboarded" not in st.session_state:
-    st.session_state.onboarded = False
-
-if "eco_points" not in st.session_state:
-    st.session_state.eco_points = 120
-
-if "last_scan" not in st.session_state:
-    st.session_state.last_scan = False
-
-# -------------------------------------------------
-# GLOBAL CSS (APP-LIKE UI)
-# -------------------------------------------------
+# Custom CSS to force a mobile-app feel and professional Earth-tone branding
 st.markdown("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-
-html, body, [class*="css"] {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-}
-
-.card {
-    background: #F9FBF9;
-    padding: 22px;
-    border-radius: 18px;
-    box-shadow: 0px 10px 30px rgba(0,0,0,0.06);
-    margin-bottom: 18px;
-}
-
-.scan-box {
-    border: 2px dashed #496e57;
-    border-radius: 18px;
-    padding: 26px;
-    text-align: center;
-    background: #ffffff;
-}
-
-.grade-a {
-    background: #dcfce7;
-    color: #166534;
-    padding: 10px 14px;
-    border-radius: 999px;
-    font-weight: 700;
-    display: inline-block;
-}
-
-.muted {
-    color: #6b7280;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# -------------------------------------------------
-# ECO GAUGE
-# -------------------------------------------------
-def eco_gauge(score):
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=score,
-        title={"text": "Eco-Score"},
-        gauge={
-            "axis": {"range": [0, 100]},
-            "bar": {"color": "#496e57"},
-            "steps": [
-                {"range": [0, 60], "color": "#fee2e2"},
-                {"range": [60, 80], "color": "#fef3c7"},
-                {"range": [80, 100], "color": "#dcfce7"},
-            ],
-        }
-    ))
-    fig.update_layout(height=260, margin=dict(t=40, b=20))
-    return fig
-
-# -------------------------------------------------
-# SCREEN 1 — ONBOARDING (STRONG FIRST IMPRESSION)
-# -------------------------------------------------
-if not st.session_state.onboarded:
-    st.title("GreenStyle 🌿")
-    st.subheader("Make fashion choices that matter")
-
-    st.markdown("""
-    <div class="card">
-    <b>How it works</b><br><br>
-    ① Scan product QR<br>
-    ② Get Eco-Score instantly<br>
-    ③ Earn rewards for sustainable choices
-    </div>
+    <style>
+    /* Main App Container */
+    .stApp {
+        background-color: #F8FAF8;
+        max-width: 400px;
+        margin: 0 auto;
+        border: 8px solid #333;
+        border-radius: 40px;
+        height: 800px;
+        overflow-y: auto;
+    }
+    /* Buttons UX */
+    .stButton>button {
+        width: 100%;
+        border-radius: 15px;
+        height: 3em;
+        background-color: #2E7D32 !important;
+        color: white !important;
+        font-weight: bold;
+        border: none;
+    }
+    /* Eco-Score Traffic Light Card */
+    .eco-card {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 20px;
+        text-align: center;
+        border: 2px solid #E8F5E9;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .grade-a {
+        font-size: 60px;
+        font-weight: 800;
+        color: #2E7D32;
+    }
+    </style>
     """, unsafe_allow_html=True)
 
-    if st.button("Start Scanning →", use_container_width=True):
-        st.session_state.onboarded = True
-        st.rerun()
+# --- 2. BACKEND LOGIC (20% UI Features) ---
+if 'page' not in st.session_state:
+    st.session_state.page = "onboarding"
+if 'points' not in st.session_state:
+    st.session_state.points = 1250
 
-    st.stop()
+def change_page(page_name):
+    st.session_state.page = page_name
 
-# -------------------------------------------------
-# NAVIGATION (SIMPLE & CLEAR)
-# -------------------------------------------------
-page = st.radio(
-    "",
-    ["🏠 Home", "📦 Scan", "🌿 Impact", "🎁 Rewards"],
-    horizontal=True
-)
+# --- 3. SCREEN DEFINITIONS ---
 
-# -------------------------------------------------
-# HOME — GUIDED DASHBOARD
-# -------------------------------------------------
-if page == "🏠 Home":
-    st.title("Your Sustainability Dashboard")
+# SCREEN 1: THE ONBOARDING
+if st.session_state.page == "onboarding":
+    st.markdown("<h1 style='text-align: center; color: #2E7D32;'>🌿 SustainStyle</h1>", unsafe_allow_html=True)
+    st.image("https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400", use_container_width=True)
+    st.markdown("<h3 style='text-align: center;'>Welcome to the Journey</h3>", unsafe_allow_html=True)
+    st.write("Transform your wardrobe into a force for good. Scan tags, see the impact, and earn rewards.")
+    st.button("Start Journey", on_click=change_page, args=("home",))
 
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Items Scanned", "42")
-    c2.metric("Water Saved", "1.2k L")
-    c3.metric("Eco Points", st.session_state.eco_points)
+# SCREEN 2: REAL-TIME SCANNER (SIMULATION)
+elif st.session_state.page == "scanner":
+    st.markdown("### AI Powered Scanner")
+    st.write("Align the clothing barcode or material tag within the frame.")
+    
+    # Using Streamlit's native camera input for the "Functional" aspect
+    img_file = st.camera_input("Scanner Active")
+    
+    if img_file:
+        with st.spinner("AI analyzing fiber composition..."):
+            time.sleep(2) # Simulated AI latency
+            st.session_state.points += 50 # Reward UI feature
+            change_page("eco_score")
+            st.rerun()
+    
+    if st.button("Cancel"):
+        change_page("home")
 
+# SCREEN 3: THE ECO-SCORE CARD
+elif st.session_state.page == "eco_score":
+    st.markdown("### Product Analysis")
     st.markdown("""
-    <div class="card">
-    💡 <b>Next best action:</b><br>
-    Scan your next clothing item to earn more Eco Points.
-    </div>
+        <div class="eco-card">
+            <div class="grade-a">A</div>
+            <p style='color: #2E7D32; font-weight: bold;'>Sustainable Choice</p>
+            <hr>
+            <p><strong>Item:</strong> Organic Cotton Hoodie</p>
+            <p><strong>Impact:</strong> 120L Water Saved</p>
+            <p><strong>Reward:</strong> +50 GreenPoints</p>
+        </div>
     """, unsafe_allow_html=True)
+    
+    
 
-# -------------------------------------------------
-# SCAN — INTUITIVE QR EXPERIENCE
-# -------------------------------------------------
-elif page == "📦 Scan":
-    st.title("Scan Product QR")
+    st.write("")
+    st.button("Claim Rewards & Go Home", on_click=change_page, args=("home",))
 
-    st.markdown("""
-    <div class="scan-box">
-    📷 Scan the QR code on the clothing tag<br>
-    <span class="muted">Paste the product link or ID below</span>
-    </div>
+# SCREEN 4: REWARDS STORE (GAMIFICATION)
+elif st.session_state.page == "home":
+    st.markdown(f"""
+        <div style='background: #2E7D32; color: white; padding: 20px; border-radius: 20px;'>
+            <p style='margin:0;'>Total Balance</p>
+            <h1 style='margin:0;'>🌱 {st.session_state.points} pts</h1>
+        </div>
     """, unsafe_allow_html=True)
+    
+    st.markdown("### Rewards Store")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.info("🌳 **Plant a Tree**\n\nCost: 500 pts")
+        st.button("Redeem Tree", key="b1")
+    with col2:
+        st.info("☕ **Bamboo Cup**\n\nCost: 300 pts")
+        st.button("Redeem Cup", key="b2")
 
-    qr_value = st.text_input(
-        "",
-        placeholder="e.g. https://brand.com/product/501"
-    )
-
-    if qr_value:
-        st.toast("Scanning product…", icon="🔍")
-        time.sleep(1)
-
-        st.session_state.last_scan = True
-        st.session_state.eco_points += 10
-
-        st.markdown("### Levi’s 501 – Organic Cotton")
-        st.markdown("<span class='grade-a'>Grade A · Sustainable</span>", unsafe_allow_html=True)
-
-        st.plotly_chart(eco_gauge(88), use_container_width=True)
-
-        st.success("You earned +10 Eco Points 🌱")
-        st.balloons()
-
-# -------------------------------------------------
-# IMPACT — FEELS MEANINGFUL
-# -------------------------------------------------
-elif page == "🌿 Impact":
-    st.title("Your Environmental Impact")
-
-    st.plotly_chart(eco_gauge(92), use_container_width=True)
-
-    st.progress(95, text="Material Health – A+")
-    st.progress(88, text="Water Efficiency – A")
-    st.progress(90, text="Ethical Labour – A+")
-
-    st.info("Certified by global sustainability standards")
-
-# -------------------------------------------------
-# REWARDS — MOTIVATING, NOT BORING
-# -------------------------------------------------
-elif page == "🎁 Rewards":
-    st.title("Rewards Store")
-    st.write(f"🌱 Eco Points: **{st.session_state.eco_points}**")
-
-    st.markdown("""
-    <div class="card">
-    🎯 <b>Next reward at 150 points</b><br>
-    Keep scanning sustainable products to unlock it.
-    </div>
-    """, unsafe_allow_html=True)
-
-    r1, r2, r3 = st.columns(3)
-
-    with r1:
-        st.markdown("🌱 **Plant a Tree**")
-        st.button("Redeem – 50 pts")
-
-    with r2:
-        st.markdown("🛍 **₹500 Eco Voucher**")
-        st.button("Redeem – 100 pts")
-
-    with r3:
-        st.markdown("🏆 **Earth Guardian Badge**")
-        st.button("Unlock – 150 pts")
+    st.write("---")
+    st.button("📸 Scan New Product", on_click=change_page, args=("scanner",))
