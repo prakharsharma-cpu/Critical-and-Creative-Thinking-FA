@@ -1,195 +1,112 @@
 import streamlit as st
-import time
 
-# --- 1. THE UX ENGINE (80% UX: Professional Mobile Aesthetic) ---
-st.set_page_config(page_title="SustainStyle Pro", page_icon="🌿", layout="centered")
+# Page Configuration for a Mobile-like feel
+st.set_page_config(page_title="SustainStyle", layout="centered")
 
+# --- CUSTOM STYLING (The "Eco" Look) ---
 st.markdown("""
     <style>
-    /* Mobile App Shell with Smooth Shadow */
-    .stApp {
-        background: #F0F4F2;
-        max-width: 420px;
-        margin: 0 auto;
-        border: 12px solid #1a1a1a;
-        border-radius: 50px;
-        height: 850px;
-        overflow-y: auto;
-        box-shadow: 0 50px 100px rgba(0,0,0,0.3);
+    .main { background-color: #f8fafc; }
+    .stButton>button {
+        width: 100%;
+        border-radius: 15px;
+        height: 3em;
+        background: linear_gradient(135deg, #4ade80 0%, #22c55e 100%);
+        color: white;
+        border: none;
+        font-weight: bold;
     }
-
-    /* Glassmorphism Point Header */
-    .header-box {
-        background: rgba(255, 255, 255, 0.6);
-        backdrop-filter: blur(10px);
-        padding: 15px;
-        border-radius: 25px;
-        text-align: center;
-        border: 1px solid rgba(255,255,255,0.3);
+    .eco-card {
+        background-color: white;
+        padding: 20px;
+        border-radius: 24px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         margin-bottom: 20px;
     }
-
-    /* Eco-Score Circle (Traffic Light System) */
-    .score-circle {
-        width: 110px; height: 110px;
-        border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 45px; font-weight: 900; color: white;
-        margin: 0 auto;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        background: linear-gradient(135deg, #2E7D32, #4CAF50); /* Default Green */
-    }
-
-    /* Recommendation Cards */
-    .rec-card {
+    .metric-text { color: #64748b; font-size: 0.8rem; }
+    .brand-title { color: #1e293b; font-size: 1.5rem; font-weight: 800; margin-bottom: 20px; }
+    .product-card {
         background: white;
-        padding: 15px;
-        border-radius: 20px;
-        border-left: 6px solid #4CAF50;
-        margin-bottom: 12px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
     }
-
-    /* Custom Streamlit Button Styling */
-    div.stButton > button {
-        border-radius: 20px !important;
-        height: 3.5em !important;
-        background-color: #2E7D32 !important;
-        color: white !important;
-        font-weight: bold !important;
-        border: none !important;
-        transition: 0.3s ease !important;
-    }
-    div.stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(46, 125, 50, 0.4) !important;
+    .score-badge {
+        background: #f0fdf4;
+        color: #166534;
+        padding: 2px 8px;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 0.8rem;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. BACKEND FEATURES (20% UI Logic) ---
-if 'page' not in st.session_state:
-    st.session_state.page = "Home"
-if 'points' not in st.session_state:
-    st.session_state.points = 1250
-if 'recent_scan' not in st.session_state:
-    st.session_state.recent_scan = None
+# --- DATA ---
+recent_scans = [
+    {
+        "id": 1,
+        "name": "Organic Cotton T-Shirt",
+        "brand": "EcoWear",
+        "image": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400",
+        "score": 85,
+    },
+    {
+        "id": 2,
+        "name": "Recycled Denim Jacket",
+        "brand": "GreenThreads",
+        "image": "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400",
+        "score": 72,
+    },
+]
 
-def nav(target):
-    st.session_state.page = target
+# --- HEADER ---
+col1, col2 = st.columns([4, 1])
+with col1:
+    st.markdown('<p class="metric-text">Welcome back</p>', unsafe_allow_html=True)
+    st.markdown('<h1 style="margin-top: -20px;">SustainStyle ✨</h1>', unsafe_allow_html=True)
 
-# --- 3. THE 5-PAGE INTERACTIVE JOURNEY ---
-
-# --- PERSISTENT HEADER ---
-if st.session_state.page != "Scanner":
-    st.markdown(f"""<div class='header-box'>
-        <small style='color:#666;'>GREENPOINTS BALANCE</small><br>
-        <span style='font-size:24px; color:#2E7D32;'>🌿 <b>{st.session_state.points}</b></span>
-    </div>""", unsafe_allow_html=True)
-
-# PAGE 1: HOME & SCAN START
-if st.session_state.page == "Home":
-    st.markdown("## Hello, Eco-Warrior!")
-    st.markdown("### Weekly Impact")
-    st.info("☁️ You saved **12.4kg of CO2** this week. You are in the top 10% of users!")
-    
-    st.markdown("---")
-    st.write("Ready to check a new item?")
-    if st.button("📸 START AI SCAN"):
-        nav("Scanner")
-        st.rerun()
-
-# PAGE 2: FUNCTIONAL SCANNER (With UX Graphic)
-elif st.session_state.page == "Scanner":
-    st.markdown("### AI Barcode Scanner")
-    st.write("Align barcode within the frame below.")
-    
-    # Graphic Overlay Simulation
+# --- GREEN POINTS CARD ---
+with st.container():
     st.markdown("""
-        <div style='border: 4px solid #4CAF50; border-radius: 30px; padding: 20px; background: #000; text-align: center;'>
-            <div style='width: 100%; height: 2px; background: #0f0; box-shadow: 0 0 10px #0f0;'></div>
-            <p style='color: white; margin-top: 100px;'>Viewfinder Active</p>
+    <div class="eco-card" style="background: #1e293b; color: white;">
+        <p style="margin: 0; opacity: 0.8; font-size: 0.8rem;">GreenPoints Balance</p>
+        <h2 style="margin: 0; color: #4ade80;">2,450 pts</h2>
+        <div style="background: #334155; height: 8px; border-radius: 4px; margin-top: 10px;">
+            <div style="background: #4ade80; width: 75%; height: 100%; border-radius: 4px;"></div>
         </div>
+        <p style="font-size: 0.7rem; margin-top: 5px; opacity: 0.7;">Level 5 • 550 pts to Level 6</p>
+    </div>
     """, unsafe_allow_html=True)
-    
-    cam_photo = st.camera_input("Scanner", label_visibility="collapsed")
-    
-    if cam_photo:
-        with st.status("AI is processing barcode...", expanded=True) as status:
-            time.sleep(1)
-            st.write("Identifying material composition...")
-            time.sleep(1)
-            status.update(label="Analysis Complete!", state="complete", expanded=False)
-        
-        st.session_state.points += 50
-        nav("Eco-Score")
-        st.rerun()
-    
-    if st.button("← Back to Dashboard"):
-        nav("Home")
-        st.rerun()
 
-# PAGE 3: ECO-SCORE RESULT (Traffic Light)
-elif st.session_state.page == "Eco-Score":
-    st.markdown("<h3 style='text-align:center;'>Product Analysis</h3>", unsafe_allow_html=True)
-    
-    # Traffic Light Color Logic
-    st.markdown('<div class="score-circle">A</div>', unsafe_allow_html=True)
-    
-    
-    
-    st.markdown("<h2 style='text-align:center; color:#2E7D32;'>Eco-Grade: Excellent</h2>", unsafe_allow_html=True)
-    
-    with st.expander("Why this score?", expanded=True):
-        st.write("✅ **100% Recycled Cotton**")
-        st.write("✅ **Water-based non-toxic dyes**")
-        st.write("✅ **Fair Trade Certified Factory**")
+# --- SCAN CTA ---
+st.markdown("""
+<div class="eco-card">
+    <h3 style="margin:0;">Scan Your Clothing</h3>
+    <p class="metric-text">Discover the environmental impact of your fashion choices</p>
+</div>
+""", unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("See Alternatives"): nav("Alternatives"); st.rerun()
-    with col2:
-        if st.button("Claim +50 Pts"): nav("Dashboard"); st.rerun()
+if st.button("🔍 Scan Now"):
+    st.toast("Camera initializing...")
 
-# PAGE 4: ALTERNATIVES RECOMMENDATIONS
-elif st.session_state.page == "Alternatives":
-    st.markdown("### Greener Picks for You")
-    st.write("Based on your scan, here are even better choices:")
-    
-    st.markdown("""
-        <div class='rec-card'>
-            <b>Patagonia Better Sweater</b><br>
-            <span style='color:green;'>Grade: A+</span> | Recycled Polyester
-        </div>
-        <div class='rec-card'>
-            <b>Tentree Hemp Hoodie</b><br>
-            <span style='color:green;'>Grade: A</span> | CO2 Neutral
-        </div>
-    """, unsafe_allow_html=True)
-    
-    
+# --- QUICK ACTIONS ---
+q1, q2 = st.columns(2)
+with q1:
+    if st.button("🍃 Eco Alternatives"):
+        st.switch_page("pages/alternatives.py") if False else st.write("Navigating...")
+with q2:
+    if st.button("📈 Track Progress"):
+        st.write("Navigating...")
 
-    if st.button("Go to Rewards"):
-        nav("Dashboard")
-        st.rerun()
+# --- RECENT SCANS ---
+st.markdown("### Recent Scans")
+r1, r2 = st.columns(2)
 
-# PAGE 5: GREENPOINTS DASHBOARD & SWAP
-elif st.session_state.page == "Dashboard":
-    st.markdown("### GreenPoints Dashboard")
-    st.success("🎉 You just earned 50 points for your last scan!")
-    
-    st.metric("Total Balance", f"{st.session_state.points} Pts", delta="50 Today")
-    
-    st.markdown("#### Redeem Rewards")
-    st.progress(0.85)
-    st.caption("85% to your next reward: **Plant-a-Tree Donation**")
-    
-    st.markdown("---")
-    st.markdown("#### 🔄 Style-Swap Community")
-    st.write("Trade your Grade-A items with others.")
-    if st.button("Open Swap Map"):
-        st.toast("Feature coming soon: Style-Swap Beta")
-    
-    if st.button("Scan Another Item"):
-        nav("Scanner")
-        st.rerun()
+for i, product in enumerate(recent_scans):
+    target_col = r1 if i == 0 else r2
+    with target_col:
+        st.image(product["image"], use_container_width=True)
+        st.markdown(f"**{product['name']}**")
+        st.markdown(f"<span class='metric-text'>{product['brand']}</span>", unsafe_allow_html=True)
+        st.markdown(f"<span class='score-badge'>Score: {product['score']}</span>", unsafe_allow_html=True)
