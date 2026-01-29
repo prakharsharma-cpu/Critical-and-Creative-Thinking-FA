@@ -1,4 +1,7 @@
 import streamlit as st
+import cv2
+import numpy as np
+from PIL import Image
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="SustainStyle", layout="centered")
@@ -12,21 +15,21 @@ if "recent_scans" not in st.session_state:
 
 DEFAULT_IMAGE = "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=400"
 
-# ---------------- MOCK BARCODE DATABASE ----------------
+# ---------------- PRODUCT DATABASE ----------------
 PRODUCT_DB = {
-    "8901234567890": {
+    "ECO_COTTON_TEE": {
         "name": "Organic Cotton T-Shirt",
         "brand": "EcoWear",
         "material": "cotton",
         "weight": 0.25
     },
-    "8909876543210": {
+    "REC_POLY_JACKET": {
         "name": "Recycled Polyester Jacket",
         "brand": "GreenThreads",
         "material": "recycled_polyester",
         "weight": 0.8
     },
-    "8905555555555": {
+    "BAMBOO_HOODIE": {
         "name": "Bamboo Fabric Hoodie",
         "brand": "EarthKind",
         "material": "bamboo",
@@ -97,37 +100,48 @@ st.markdown(f"""
 st.markdown("""
 <div class="eco-card">
 <h3 style="margin:0;">Scan Your Clothing</h3>
-<p class="metric-text">Enter barcode number manually</p>
+<p class="metric-text">Scan QR code to analyze sustainability</p>
 </div>
 """, unsafe_allow_html=True)
 
-barcode = st.text_input("Enter barcode number", placeholder="e.g. 8901234567890")
+# ---------------- QR SCANNER ----------------
+camera_image = st.camera_input("Scan QR Code")
 
-if st.button("🔍 Scan Now"):
-    product_data = PRODUCT_DB.get(barcode)
+if camera_image:
+    image = Image.open(camera_image)
+    image_np = np.array(image)
 
-    if product_data:
-        factor = EMISSION_FACTORS[product_data["material"]]
-        carbon = round(product_data["weight"] * factor, 2)
-        eco_score = max(40, int(100 - carbon * 8))
+    detector = cv2.QRCodeDetector()
+    data, _, _ = detector.detectAndDecode(image_np)
 
-        st.session_state.points += eco_score
+    if data:
+        product_data = PRODUCT_DB.get(data)
 
-        product = {
-            "id": barcode,
-            "name": product_data["name"],
-            "brand": product_data["brand"],
-            "material": product_data["material"],
-            "carbon": carbon,
-            "score": eco_score,
-            "image": DEFAULT_IMAGE
-        }
+        if product_data:
+            factor = EMISSION_FACTORS[product_data["material"]]
+            carbon = round(product_data["weight"] * factor, 2)
+            eco_score = max(40, int(100 - carbon * 8))
 
-        st.session_state.recent_scans.insert(0, product)
-        st.toast(f"Scan complete • {carbon} kg CO₂e • +{eco_score} pts 🌱")
+            st.session_state.points += eco_score
+
+            product = {
+                "id": data,
+                "name": product_data["name"],
+                "brand": product_data["brand"],
+                "material": product_data["material"],
+                "carbon": carbon,
+                "score": eco_score,
+                "image": DEFAULT_IMAGE
+            }
+
+            st.session_state.recent_scans.insert(0, product)
+            st.toast(f"QR detected • {carbon} kg CO₂e • +{eco_score} pts 🌱")
+
+        else:
+            st.warning("QR code not found in product database.")
 
     else:
-        st.warning("Barcode not found in database.")
+        st.warning("No QR code detected. Try again.")
 
 # ---------------- RECENT SCANS ----------------
 st.markdown("### Recent Scans")
