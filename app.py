@@ -1,7 +1,4 @@
 import streamlit as st
-from PIL import Image
-from pyzbar.pyzbar import decode
-import random
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="SustainStyle", layout="centered")
@@ -46,7 +43,7 @@ EMISSION_FACTORS = {
     "linen": 2.1
 }
 
-# ---------------- STYLING (UNCHANGED) ----------------
+# ---------------- STYLING (UNCHANGED UX) ----------------
 st.markdown("""
 <style>
 .main { background-color: #f8fafc; }
@@ -100,47 +97,37 @@ st.markdown(f"""
 st.markdown("""
 <div class="eco-card">
 <h3 style="margin:0;">Scan Your Clothing</h3>
-<p class="metric-text">Upload a barcode image to analyze sustainability</p>
+<p class="metric-text">Enter barcode number manually</p>
 </div>
 """, unsafe_allow_html=True)
 
-uploaded_file = st.file_uploader("Upload barcode image", type=["png","jpg","jpeg"])
+barcode = st.text_input("Enter barcode number", placeholder="e.g. 8901234567890")
 
-# ---------------- BARCODE + CARBON LOGIC ----------------
-if uploaded_file:
-    image = Image.open(uploaded_file)
-    decoded = decode(image)
+if st.button("🔍 Scan Now"):
+    product_data = PRODUCT_DB.get(barcode)
 
-    if decoded:
-        barcode = decoded[0].data.decode("utf-8")
+    if product_data:
+        factor = EMISSION_FACTORS[product_data["material"]]
+        carbon = round(product_data["weight"] * factor, 2)
+        eco_score = max(40, int(100 - carbon * 8))
 
-        product_data = PRODUCT_DB.get(barcode)
+        st.session_state.points += eco_score
 
-        if product_data:
-            factor = EMISSION_FACTORS[product_data["material"]]
-            carbon = round(product_data["weight"] * factor, 2)
+        product = {
+            "id": barcode,
+            "name": product_data["name"],
+            "brand": product_data["brand"],
+            "material": product_data["material"],
+            "carbon": carbon,
+            "score": eco_score,
+            "image": DEFAULT_IMAGE
+        }
 
-            eco_score = max(40, int(100 - carbon * 8))
-            st.session_state.points += eco_score
-
-            product = {
-                "id": barcode,
-                "name": product_data["name"],
-                "brand": product_data["brand"],
-                "material": product_data["material"],
-                "carbon": carbon,
-                "score": eco_score,
-                "image": DEFAULT_IMAGE
-            }
-
-            st.session_state.recent_scans.insert(0, product)
-            st.toast(f"Scan complete • {carbon} kg CO₂e • +{eco_score} pts 🌱")
-
-        else:
-            st.warning("Barcode not found in database.")
+        st.session_state.recent_scans.insert(0, product)
+        st.toast(f"Scan complete • {carbon} kg CO₂e • +{eco_score} pts 🌱")
 
     else:
-        st.warning("No barcode detected.")
+        st.warning("Barcode not found in database.")
 
 # ---------------- RECENT SCANS ----------------
 st.markdown("### Recent Scans")
@@ -151,8 +138,14 @@ for i, product in enumerate(st.session_state.recent_scans[:2]):
     with col:
         st.image(product["image"], use_container_width=True)
         st.markdown(f"**{product['name']}**")
-        st.markdown(f"<span class='metric-text'>{product['brand']}</span>", unsafe_allow_html=True)
-        st.markdown(f"<span class='score-badge'>Eco Score: {product['score']}</span>", unsafe_allow_html=True)
+        st.markdown(
+            f"<span class='metric-text'>{product['brand']}</span>",
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            f"<span class='score-badge'>Eco Score: {product['score']}</span>",
+            unsafe_allow_html=True
+        )
         st.caption(f"Carbon Footprint: {product['carbon']} kg CO₂e")
 
 # ---------------- EVALUATION METRICS ----------------
@@ -162,7 +155,7 @@ if st.session_state.recent_scans:
     avg_score = sum(p["score"] for p in st.session_state.recent_scans) / len(st.session_state.recent_scans)
     avg_carbon = sum(p["carbon"] for p in st.session_state.recent_scans) / len(st.session_state.recent_scans)
 
-    baseline = 6.5  # fast fashion baseline
+    baseline = 6.5
     improvement = ((baseline - avg_carbon) / baseline) * 100
 
     st.markdown(f"""
