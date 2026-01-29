@@ -1,7 +1,7 @@
 import streamlit as st
 import random
 
-# Page Configuration for a Mobile-like feel
+# ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="SustainStyle", layout="centered")
 
 # ---------------- SESSION STATE ----------------
@@ -26,7 +26,10 @@ if "recent_scans" not in st.session_state:
         },
     ]
 
-# ---------------- STYLING (UNCHANGED) ----------------
+# Fallback image (IMPORTANT FIX)
+DEFAULT_IMAGE = "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=400"
+
+# ---------------- STYLING (UNCHANGED UX) ----------------
 st.markdown("""
 <style>
 .main { background-color: #f8fafc; }
@@ -47,7 +50,6 @@ st.markdown("""
     margin-bottom: 20px;
 }
 .metric-text { color: #64748b; font-size: 0.8rem; }
-.brand-title { color: #1e293b; font-size: 1.5rem; font-weight: 800; margin-bottom: 20px; }
 .score-badge {
     background: #f0fdf4;
     color: #166534;
@@ -63,20 +65,20 @@ st.markdown("""
 col1, col2 = st.columns([4, 1])
 with col1:
     st.markdown('<p class="metric-text">Welcome back</p>', unsafe_allow_html=True)
-    st.markdown('<h1 style="margin-top: -20px;">SustainStyle ✨</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 style="margin-top:-20px;">SustainStyle ✨</h1>', unsafe_allow_html=True)
 
 # ---------------- GREEN POINTS CARD ----------------
 progress = min(st.session_state.points / 3000 * 100, 100)
 
 st.markdown(f"""
-<div class="eco-card" style="background: #1e293b; color: white;">
-    <p style="margin: 0; opacity: 0.8; font-size: 0.8rem;">GreenPoints Balance</p>
-    <h2 style="margin: 0; color: #4ade80;">{st.session_state.points} pts</h2>
-    <div style="background: #334155; height: 8px; border-radius: 4px; margin-top: 10px;">
-        <div style="background: #4ade80; width: {progress}%; height: 100%; border-radius: 4px;"></div>
+<div class="eco-card" style="background:#1e293b;color:white;">
+    <p style="opacity:0.8;font-size:0.8rem;">GreenPoints Balance</p>
+    <h2 style="color:#4ade80;">{st.session_state.points} pts</h2>
+    <div style="background:#334155;height:8px;border-radius:4px;">
+        <div style="background:#4ade80;width:{progress}%;height:100%;border-radius:4px;"></div>
     </div>
-    <p style="font-size: 0.7rem; margin-top: 5px; opacity: 0.7;">
-        Level 5 • {3000 - st.session_state.points} pts to Level 6
+    <p style="font-size:0.7rem;opacity:0.7;">
+        Level 5 • {max(0, 3000 - st.session_state.points)} pts to Level 6
     </p>
 </div>
 """, unsafe_allow_html=True)
@@ -94,28 +96,33 @@ if st.button("🔍 Scan Now"):
     st.session_state.points += score
 
     new_product = {
-        "id": random.randint(100, 999),
+        "id": random.randint(1000, 9999),
         "name": random.choice([
             "Bamboo Fabric Hoodie",
             "Organic Linen Shirt",
             "Recycled Polyester Tee"
         ]),
-        "brand": random.choice(["EcoWear", "GreenThreads", "EarthKind"]),
-        "image": "https://images.unsplash.com/photo-1520975916090-3105956dac38?w=400",
+        "brand": random.choice([
+            "EcoWear",
+            "GreenThreads",
+            "EarthKind"
+        ]),
+        # 🔑 ALWAYS ADD IMAGE
+        "image": DEFAULT_IMAGE,
         "score": score,
     }
 
     st.session_state.recent_scans.insert(0, new_product)
     st.toast(f"Scan complete! +{score} pts 🌱")
 
-# ---------------- QUICK ACTIONS (UNCHANGED UX) ----------------
+# ---------------- QUICK ACTIONS ----------------
 q1, q2 = st.columns(2)
 with q1:
     if st.button("🍃 Eco Alternatives"):
-        st.toast("Showing eco-friendly alternatives 🌿")
+        st.toast("Eco-friendly alternatives coming soon 🌿")
 with q2:
     if st.button("📈 Track Progress"):
-        st.toast("Tracking your sustainability journey 📊")
+        st.toast("Progress tracking enabled 📊")
 
 # ---------------- RECENT SCANS ----------------
 st.markdown("### Recent Scans")
@@ -124,13 +131,17 @@ r1, r2 = st.columns(2)
 for i, product in enumerate(st.session_state.recent_scans[:2]):
     target_col = r1 if i % 2 == 0 else r2
     with target_col:
-        st.image(product["image"], use_container_width=True)
-        st.markdown(f"**{product['name']}**")
+        # 🔑 SAFE IMAGE ACCESS
+        st.image(
+            product.get("image", DEFAULT_IMAGE),
+            use_container_width=True
+        )
+        st.markdown(f"**{product.get('name', 'Unknown Item')}**")
         st.markdown(
-            f"<span class='metric-text'>{product['brand']}</span>",
+            f"<span class='metric-text'>{product.get('brand', 'Unknown Brand')}</span>",
             unsafe_allow_html=True
         )
         st.markdown(
-            f"<span class='score-badge'>Score: {product['score']}</span>",
+            f"<span class='score-badge'>Score: {product.get('score', 'N/A')}</span>",
             unsafe_allow_html=True
         )
