@@ -1,7 +1,4 @@
 import streamlit as st
-import cv2
-import numpy as np
-from PIL import Image
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="SustainStyle", layout="centered")
@@ -100,67 +97,51 @@ st.markdown(f"""
 st.markdown("""
 <div class="eco-card">
 <h3 style="margin:0;">Scan Your Clothing</h3>
-<p class="metric-text">Scan QR code to analyze sustainability</p>
+<p class="metric-text">Upload QR image or enter QR code manually</p>
 </div>
 """, unsafe_allow_html=True)
 
-# ---------------- QR SCANNER ----------------
-camera_image = st.camera_input("Scan QR Code")
+uploaded = st.file_uploader("Upload QR image (optional)", type=["png", "jpg", "jpeg"])
+qr_code = st.text_input("Enter QR code value", placeholder="ECO_COTTON_TEE")
 
-if camera_image:
-    image = Image.open(camera_image)
-    image_np = np.array(image)
+if st.button("🔍 Scan Now"):
+    code = qr_code.strip()
 
-    detector = cv2.QRCodeDetector()
-    data, _, _ = detector.detectAndDecode(image_np)
+    if code in PRODUCT_DB:
+        product_data = PRODUCT_DB[code]
+        factor = EMISSION_FACTORS[product_data["material"]]
+        carbon = round(product_data["weight"] * factor, 2)
+        eco_score = max(40, int(100 - carbon * 8))
 
-    if data:
-        product_data = PRODUCT_DB.get(data)
+        st.session_state.points += eco_score
 
-        if product_data:
-            factor = EMISSION_FACTORS[product_data["material"]]
-            carbon = round(product_data["weight"] * factor, 2)
-            eco_score = max(40, int(100 - carbon * 8))
+        st.session_state.recent_scans.insert(0, {
+            "id": code,
+            "name": product_data["name"],
+            "brand": product_data["brand"],
+            "material": product_data["material"],
+            "carbon": carbon,
+            "score": eco_score,
+            "image": DEFAULT_IMAGE
+        })
 
-            st.session_state.points += eco_score
-
-            product = {
-                "id": data,
-                "name": product_data["name"],
-                "brand": product_data["brand"],
-                "material": product_data["material"],
-                "carbon": carbon,
-                "score": eco_score,
-                "image": DEFAULT_IMAGE
-            }
-
-            st.session_state.recent_scans.insert(0, product)
-            st.toast(f"QR detected • {carbon} kg CO₂e • +{eco_score} pts 🌱")
-
-        else:
-            st.warning("QR code not found in product database.")
+        st.toast(f"Scan complete • {carbon} kg CO₂e • +{eco_score} pts 🌱")
 
     else:
-        st.warning("No QR code detected. Try again.")
+        st.warning("QR code not recognised.")
 
 # ---------------- RECENT SCANS ----------------
 st.markdown("### Recent Scans")
-r1, r2 = st.columns(2)
+c1, c2 = st.columns(2)
 
-for i, product in enumerate(st.session_state.recent_scans[:2]):
-    col = r1 if i % 2 == 0 else r2
+for i, p in enumerate(st.session_state.recent_scans[:2]):
+    col = c1 if i % 2 == 0 else c2
     with col:
-        st.image(product["image"], use_container_width=True)
-        st.markdown(f"**{product['name']}**")
-        st.markdown(
-            f"<span class='metric-text'>{product['brand']}</span>",
-            unsafe_allow_html=True
-        )
-        st.markdown(
-            f"<span class='score-badge'>Eco Score: {product['score']}</span>",
-            unsafe_allow_html=True
-        )
-        st.caption(f"Carbon Footprint: {product['carbon']} kg CO₂e")
+        st.image(p["image"], use_container_width=True)
+        st.markdown(f"**{p['name']}**")
+        st.markdown(f"<span class='metric-text'>{p['brand']}</span>", unsafe_allow_html=True)
+        st.markdown(f"<span class='score-badge'>Eco Score: {p['score']}</span>", unsafe_allow_html=True)
+        st.caption(f"Carbon Footprint: {p['carbon']} kg CO₂e")
 
 # ---------------- EVALUATION METRICS ----------------
 st.markdown("### 📊 Sustainability Evaluation")
