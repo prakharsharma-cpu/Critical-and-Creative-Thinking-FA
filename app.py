@@ -1,162 +1,179 @@
 import streamlit as st
 
-# ---------------- PAGE CONFIG ----------------
-st.set_page_config(page_title="SustainStyle", layout="centered")
+# --- PAGE CONFIG ---
+st.set_page_config(page_title="SustainStyle", page_icon="🌿", layout="centered")
 
-# ---------------- SESSION STATE ----------------
-if "points" not in st.session_state:
-    st.session_state.points = 2450
+# --- CUSTOM CSS (Tailwind & Framer Motion Mimicry) ---
+st.markdown("""
+    <style>
+    /* Main Container Styles */
+    .main {
+        background-color: #f8fafc;
+    }
+    
+    /* Card Styles */
+    .eco-card {
+        background-color: white;
+        padding: 24px;
+        border-radius: 24px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+        border: 1px solid #f1f5f9;
+    }
 
-if "recent_scans" not in st.session_state:
-    st.session_state.recent_scans = []
+    /* Green Nature Gradient for Scan Button */
+    .gradient-nature {
+        background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        color: white;
+        padding: 16px;
+        border-radius: 16px;
+        text-align: center;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.2s;
+        text-decoration: none;
+        display: block;
+        margin-top: 10px;
+    }
+    .gradient-nature:hover {
+        transform: scale(1.02);
+        color: white;
+    }
 
-DEFAULT_IMAGE = "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=400"
+    /* Score Badge */
+    .score-badge {
+        background: #ecfdf5;
+        color: #059669;
+        padding: 4px 12px;
+        border-radius: 99px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
 
-# ---------------- PRODUCT DATABASE ----------------
-PRODUCT_DB = {
-    "ECO_COTTON_TEE": {
+    /* Product Image Styling */
+    .product-img {
+        width: 100%;
+        border-radius: 16px;
+        object-fit: cover;
+        height: 120px;
+        margin-bottom: 8px;
+    }
+
+    /* Quick Action Buttons */
+    .quick-action {
+        background: white;
+        border-radius: 20px;
+        padding: 16px;
+        text-align: left;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        border: 1px solid #f1f5f9;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    /* Hide Streamlit elements for cleaner UI */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    </style>
+""", unsafe_allow_html=True)
+
+# --- DATA ---
+recent_scans = [
+    {
+        "id": 1,
         "name": "Organic Cotton T-Shirt",
         "brand": "EcoWear",
-        "material": "cotton",
-        "weight": 0.25
+        "image": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400",
+        "score": 85,
     },
-    "REC_POLY_JACKET": {
-        "name": "Recycled Polyester Jacket",
+    {
+        "id": 2,
+        "name": "Recycled Denim Jacket",
         "brand": "GreenThreads",
-        "material": "recycled_polyester",
-        "weight": 0.8
+        "image": "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400",
+        "score": 72,
     },
-    "BAMBOO_HOODIE": {
-        "name": "Bamboo Fabric Hoodie",
-        "brand": "EarthKind",
-        "material": "bamboo",
-        "weight": 0.6
-    }
-}
+]
 
-# ---------------- EMISSION FACTORS ----------------
-EMISSION_FACTORS = {
-    "cotton": 5.9,
-    "polyester": 9.5,
-    "recycled_polyester": 3.0,
-    "bamboo": 2.5,
-    "linen": 2.1
-}
+# --- UI LAYOUT ---
 
-# ---------------- STYLING (UNCHANGED UX) ----------------
-st.markdown("""
-<style>
-.main { background-color: #f8fafc; }
-.stButton>button {
-    width: 100%;
-    border-radius: 15px;
-    height: 3em;
-    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
-    color: white;
-    border: none;
-    font-weight: bold;
-}
-.eco-card {
-    background-color: white;
-    padding: 20px;
-    border-radius: 24px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    margin-bottom: 20px;
-}
-.metric-text { color: #64748b; font-size: 0.8rem; }
-.score-badge {
-    background: #f0fdf4;
-    color: #166534;
-    padding: 2px 8px;
-    border-radius: 8px;
-    font-weight: bold;
-    font-size: 0.8rem;
-}
-</style>
-""", unsafe_allow_html=True)
+# 1. Header
+col1, col2 = st.columns([4, 1])
+with col1:
+    st.markdown('<p style="color: #64748b; margin-bottom: 0;">Welcome back</p>', unsafe_allow_html=True)
+    st.markdown('<h1 style="margin-top: 0; font-weight: 800;">SustainStyle</h1>', unsafe_allow_html=True)
+with col2:
+    st.markdown('<div style="background: #f1f5f9; padding: 12px; border-radius: 50%; text-align: center;">✨</div>', unsafe_allow_html=True)
 
-# ---------------- HEADER ----------------
-st.markdown('<p class="metric-text">Welcome back</p>', unsafe_allow_html=True)
-st.markdown('<h1 style="margin-top:-20px;">SustainStyle ✨</h1>', unsafe_allow_html=True)
-
-# ---------------- GREEN POINTS ----------------
-progress = min(st.session_state.points / 3000 * 100, 100)
-
+# 2. GreenPoints Summary (Mock Component)
 st.markdown(f"""
-<div class="eco-card" style="background:#1e293b;color:white;">
-<p style="opacity:0.8;font-size:0.8rem;">GreenPoints Balance</p>
-<h2 style="color:#4ade80;">{st.session_state.points} pts</h2>
-<div style="background:#334155;height:8px;border-radius:4px;">
-<div style="background:#4ade80;width:{progress}%;height:100%;border-radius:4px;"></div>
-</div>
-<p style="font-size:0.7rem;opacity:0.7;">Level 5</p>
-</div>
-""", unsafe_allow_html=True)
-
-# ---------------- SCAN CTA ----------------
-st.markdown("""
-<div class="eco-card">
-<h3 style="margin:0;">Scan Your Clothing</h3>
-<p class="metric-text">Upload QR image or enter QR code manually</p>
-</div>
-""", unsafe_allow_html=True)
-
-uploaded = st.file_uploader("Upload QR image (optional)", type=["png", "jpg", "jpeg"])
-qr_code = st.text_input("Enter QR code value", placeholder="ECO_COTTON_TEE")
-
-if st.button("🔍 Scan Now"):
-    code = qr_code.strip()
-
-    if code in PRODUCT_DB:
-        product_data = PRODUCT_DB[code]
-        factor = EMISSION_FACTORS[product_data["material"]]
-        carbon = round(product_data["weight"] * factor, 2)
-        eco_score = max(40, int(100 - carbon * 8))
-
-        st.session_state.points += eco_score
-
-        st.session_state.recent_scans.insert(0, {
-            "id": code,
-            "name": product_data["name"],
-            "brand": product_data["brand"],
-            "material": product_data["material"],
-            "carbon": carbon,
-            "score": eco_score,
-            "image": DEFAULT_IMAGE
-        })
-
-        st.toast(f"Scan complete • {carbon} kg CO₂e • +{eco_score} pts 🌱")
-
-    else:
-        st.warning("QR code not recognised.")
-
-# ---------------- RECENT SCANS ----------------
-st.markdown("### Recent Scans")
-c1, c2 = st.columns(2)
-
-for i, p in enumerate(st.session_state.recent_scans[:2]):
-    col = c1 if i % 2 == 0 else c2
-    with col:
-        st.image(p["image"], use_container_width=True)
-        st.markdown(f"**{p['name']}**")
-        st.markdown(f"<span class='metric-text'>{p['brand']}</span>", unsafe_allow_html=True)
-        st.markdown(f"<span class='score-badge'>Eco Score: {p['score']}</span>", unsafe_allow_html=True)
-        st.caption(f"Carbon Footprint: {p['carbon']} kg CO₂e")
-
-# ---------------- EVALUATION METRICS ----------------
-st.markdown("### 📊 Sustainability Evaluation")
-
-if st.session_state.recent_scans:
-    avg_score = sum(p["score"] for p in st.session_state.recent_scans) / len(st.session_state.recent_scans)
-    avg_carbon = sum(p["carbon"] for p in st.session_state.recent_scans) / len(st.session_state.recent_scans)
-
-    baseline = 6.5
-    improvement = ((baseline - avg_carbon) / baseline) * 100
-
-    st.markdown(f"""
-    <div class="eco-card">
-    <p>Average Eco Score: <b>{avg_score:.1f}</b></p>
-    <p>Average Carbon Footprint: <b>{avg_carbon:.2f} kg CO₂e</b></p>
-    <p>Reduction vs Fast Fashion: <b>{improvement:.1f}%</b></p>
+    <div class="eco-card" style="background: #1e293b; color: white;">
+        <p style="font-size: 0.8rem; opacity: 0.8; margin-bottom: 4px;">Total GreenPoints</p>
+        <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <h2 style="color: white; margin: 0;">2,450</h2>
+            <span style="font-size: 0.9rem;">Level 5</span>
+        </div>
+        <div style="background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; margin-top: 12px;">
+            <div style="background: #2ecc71; width: 75%; height: 100%; border-radius: 3px;"></div>
+        </div>
+        <p style="font-size: 0.7rem; margin-top: 8px; opacity: 0.7;">550 points until Level 6</p>
     </div>
+""", unsafe_allow_html=True)
+
+# 3. Scan CTA
+st.markdown("""
+    <div class="eco-card">
+        <h3 style="margin-top: 0;">Scan Your Clothing</h3>
+        <p style="color: #64748b; font-size: 0.9rem;">Discover the environmental impact of your fashion choices</p>
+        <a href="/scan" class="gradient-nature">🔍 Scan Now</a>
+    </div>
+""", unsafe_allow_html=True)
+
+# 4. Quick Actions
+st.markdown('<h3 style="font-size: 1.1rem; margin-bottom: 12px;">Quick Actions</h3>', unsafe_allow_html=True)
+qa_col1, qa_col2 = st.columns(2)
+with qa_col1:
+    st.markdown("""
+        <div class="quick-action">
+            <span style="background: #ecfdf5; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">🌿</span>
+            <span style="font-size: 0.85rem; font-weight: 600;">Find Eco Alternatives</span>
+        </div>
     """, unsafe_allow_html=True)
+with qa_col2:
+    st.markdown("""
+        <div class="quick-action">
+            <span style="background: #eff6ff; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">📈</span>
+            <span style="font-size: 0.85rem; font-weight: 600;">Track Progress</span>
+        </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# 5. Recent Scans
+st.markdown("""
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="margin: 0; font-size: 1.1rem;">Recent Scans</h3>
+        <a href="#" style="color: #2ecc71; font-size: 0.85rem; text-decoration: none; font-weight: 600;">See All</a>
+    </div>
+""", unsafe_allow_html=True)
+
+# Grid for products
+prod_col1, prod_col2 = st.columns(2)
+cols = [prod_col1, prod_col2]
+
+for idx, product in enumerate(recent_scans):
+    with cols[idx % 2]:
+        st.markdown(f"""
+            <div class="eco-card" style="padding: 12px;">
+                <img src="{product['image']}" class="product-img">
+                <p style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{product['name']}</p>
+                <p style="color: #64748b; font-size: 0.75rem; margin-top: 0;">{product['brand']}</p>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="score-badge">Score: {product['score']}</span>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+        if st.button(f"View Details", key=f"prod_{product['id']}"):
+            st.info(f"Navigating to details for {product['name']}...")
