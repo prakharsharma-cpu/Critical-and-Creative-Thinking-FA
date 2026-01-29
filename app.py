@@ -15,82 +15,95 @@ if "page" not in st.session_state:
 if "selected_product" not in st.session_state:
     st.session_state.selected_product = None
 
-# ---------------- CSS ----------------
+# ---------------- CSS (HIGH CONTRAST ONLY) ----------------
 st.markdown("""
 <style>
 .main {
-    background-color: #f8fafc;
+    background-color: #f9fafb;
 }
 
-/* CARD */
+/* CARDS */
 .eco-card {
-    background: white;
-    padding: 24px;
-    border-radius: 20px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
-    margin-bottom: 20px;
-    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    padding: 22px;
+    border-radius: 14px;
+    border: 1px solid #d1d5db;
+    margin-bottom: 18px;
 }
 
-/* TEXT */
+/* TEXT – ALWAYS VISIBLE */
 .title {
-    color: #064e3b;
-    font-weight: 800;
+    color: #065f46;
     font-size: 2rem;
+    font-weight: 800;
 }
 
 .subtitle {
-    color: #334155;
+    color: #1f2933;
     font-size: 1rem;
 }
 
 .section-title {
-    color: #065f46;
+    color: #064e3b;
     font-weight: 700;
+    font-size: 1.2rem;
 }
 
 .primary-text {
-    color: #0f172a;
+    color: #111827;
     font-weight: 600;
 }
 
 .secondary-text {
-    color: #64748b;
-    font-size: 0.85rem;
+    color: #374151;
+    font-size: 0.9rem;
 }
 
-.good { color: #16a34a; font-weight: 600; }
-.warn { color: #ca8a04; font-weight: 600; }
-.bad { color: #dc2626; font-weight: 600; }
+/* STATUS COLORS (READABLE) */
+.good {
+    color: #166534;
+    font-weight: 600;
+}
 
-/* BUTTON */
+.warn {
+    color: #92400e;
+    font-weight: 600;
+}
+
+.bad {
+    color: #991b1b;
+    font-weight: 600;
+}
+
+/* BUTTON – CLEAR */
 .stButton > button {
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-    color: white;
-    border-radius: 14px;
-    padding: 14px;
+    background-color: #22c55e;
+    color: #052e16;
+    border-radius: 10px;
     font-weight: 700;
-    border: none;
+    border: 1px solid #16a34a;
+    padding: 12px;
 }
 
 .stButton > button:hover {
-    transform: scale(1.02);
+    background-color: #16a34a;
 }
 
-/* PRODUCT */
+/* PRODUCT IMAGE */
 .product-img {
     width: 100%;
     height: 120px;
     object-fit: cover;
-    border-radius: 14px;
+    border-radius: 10px;
 }
 
 /* SCORE BADGE */
 .score {
-    background: #ecfdf5;
+    background-color: #ecfdf5;
+    border: 1px solid #16a34a;
     padding: 6px 12px;
-    border-radius: 99px;
-    font-size: 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
     font-weight: 700;
 }
 
@@ -131,34 +144,28 @@ def score_class(score):
 # ================= HOME =================
 if st.session_state.page == "home":
 
-    # HERO
     st.markdown("""
-    <div class="eco-card" style="background:#f0fdf4">
+    <div class="eco-card">
         <div class="title">SustainStyle 🌿</div>
         <p class="subtitle">
-            Scan clothes • Understand impact • Make better choices
+            Scan clothes, understand environmental impact, and make better fashion choices.
         </p>
     </div>
     """, unsafe_allow_html=True)
 
-    # PRIMARY ACTION
     if st.button("🔍 Scan Your Clothing", use_container_width=True):
         st.session_state.page = "scan"
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # GREEN POINTS (SECONDARY)
     st.markdown("""
     <div class="eco-card">
-        <p class="secondary-text">Your GreenPoints</p>
+        <p class="section-title">Your GreenPoints</p>
         <h2 class="good">2,450</h2>
         <progress value="75" max="100" style="width:100%"></progress>
-        <p class="secondary-text">550 points to next level</p>
+        <p class="secondary-text">550 points needed for next level</p>
     </div>
     """, unsafe_allow_html=True)
 
-    # RECENT SCANS
-    st.markdown('<h3 class="section-title">Recent Scans</h3>', unsafe_allow_html=True)
+    st.markdown('<p class="section-title">Recent Scans</p>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
     for i, product in enumerate(recent_scans):
@@ -169,7 +176,7 @@ if st.session_state.page == "home":
                 <p class="primary-text">{product['name']}</p>
                 <p class="secondary-text">{product['brand']}</p>
                 <span class="score {score_class(product['score'])}">
-                    Score {product['score']}
+                    Score: {product['score']}
                 </span>
             </div>
             """, unsafe_allow_html=True)
@@ -183,7 +190,7 @@ elif st.session_state.page == "scan":
 
     score = random.randint(55, 95)
 
-    st.markdown('<h2 class="section-title">Scan Result 📸</h2>', unsafe_allow_html=True)
+    st.markdown('<p class="section-title">Scan Result</p>', unsafe_allow_html=True)
 
     st.markdown(f"""
     <div class="eco-card">
@@ -195,14 +202,14 @@ elif st.session_state.page == "scan":
 
     st.markdown("""
     <div class="eco-card">
-        <h4 class="section-title">Impact Breakdown</h4>
+        <p class="section-title">Impact Breakdown</p>
         <p class="good">🌱 Materials: Eco-friendly</p>
-        <p class="warn">💧 Water Usage: Moderate</p>
-        <p class="good">🏭 Carbon Footprint: Low</p>
+        <p class="warn">💧 Water usage: Moderate</p>
+        <p class="good">🏭 Carbon footprint: Low</p>
     </div>
     """, unsafe_allow_html=True)
 
-    st.success("✔ 50 GreenPoints earned")
+    st.success("You earned 50 GreenPoints")
 
     if st.button("⬅ Back to Home"):
         st.session_state.page = "home"
@@ -212,7 +219,7 @@ elif st.session_state.page == "details":
 
     p = st.session_state.selected_product
 
-    st.markdown(f'<h2 class="section-title">{p["name"]}</h2>', unsafe_allow_html=True)
+    st.markdown(f'<p class="section-title">{p["name"]}</p>', unsafe_allow_html=True)
     st.image(p["image"], use_container_width=True)
 
     st.markdown(f"""
@@ -228,7 +235,7 @@ elif st.session_state.page == "details":
 
     st.markdown("""
     <div class="eco-card">
-        <h4 class="section-title">Better Alternatives</h4>
+        <p class="section-title">Better Alternatives</p>
         <p class="good">🌿 Hemp Cotton Tee</p>
         <p class="good">🌿 Bamboo Fabric Shirt</p>
     </div>
