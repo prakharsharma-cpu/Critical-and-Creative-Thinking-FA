@@ -6,7 +6,6 @@ import requests
 from streamlit_lottie import st_lottie
 import time
 import random
-from datetime import date
 
 # ---------------- CONFIGURATION ----------------
 st.set_page_config(
@@ -25,7 +24,6 @@ def load_lottieurl(url: str):
     except: return None
 
 # Load Animations
-lottie_earth = load_lottieurl("https://assets5.lottiefiles.com/packages/lf20_sO4cnC.json")
 lottie_scan = load_lottieurl("https://assets9.lottiefiles.com/packages/lf20_w51pcehl.json")
 
 # Custom CSS: "Glassmorphism & Nature" Theme
@@ -35,10 +33,9 @@ st.markdown("""
     
     html, body, [class*="css"] {
         font-family: 'Outfit', sans-serif; 
-        background-color: #f1f8f5; /* Soft Mint Background */
+        background-color: #f1f8f5; 
     }
     
-    /* The Glass Card Effect */
     .glass-card {
         background: rgba(255, 255, 255, 0.7);
         backdrop-filter: blur(10px);
@@ -53,10 +50,9 @@ st.markdown("""
     
     .glass-card:hover {
         transform: translateY(-5px);
-        border-left: 5px solid #10b981; /* Green accent on hover */
+        border-left: 5px solid #10b981; 
     }
 
-    /* Metric Styling */
     .big-number {
         font-size: 2.5rem;
         font-weight: 700;
@@ -68,8 +64,7 @@ st.markdown("""
         text-transform: uppercase;
         letter-spacing: 1px;
     }
-
-    /* Sidebar Clean Up */
+    
     section[data-testid="stSidebar"] {
         background-color: #ffffff;
         border-right: 1px solid #e2e8f0;
@@ -77,11 +72,13 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------- SESSION STATE ----------------
+# ---------------- SESSION STATE & DATA REPAIR ----------------
 if "user_xp" not in st.session_state: st.session_state.user_xp = 1250
 if "user_level" not in st.session_state: st.session_state.user_level = 3
-if "history" not in st.session_state: 
-    # Dummy history
+
+# === FIX: AUTO-REPAIR OLD DATA ===
+# If history doesn't exist OR if the first item is missing the 'Type' key (from old version)
+if "history" not in st.session_state or (len(st.session_state.history) > 0 and "Type" not in st.session_state.history[0]):
     st.session_state.history = [
         {"Name": "Vintage Levi's", "Brand": "Levi's", "Score": 88, "Type": "Denim"},
         {"Name": "Fast Fashion Tee", "Brand": "H&M", "Score": 45, "Type": "Cotton"},
@@ -91,7 +88,6 @@ if "history" not in st.session_state:
 # Gamification Logic
 def add_xp(amount):
     st.session_state.user_xp += amount
-    # Level up logic: Level up every 500 XP
     new_level = 1 + (st.session_state.user_xp // 500)
     if new_level > st.session_state.user_level:
         st.session_state.user_level = new_level
@@ -104,7 +100,6 @@ with st.sidebar:
     st.write(f"### Sustainability Profile")
     st.write(f"**Level {st.session_state.user_level} Eco-Guardian**")
     
-    # Custom Progress Bar
     current_xp_in_level = st.session_state.user_xp % 500
     st.progress(current_xp_in_level / 500)
     st.caption(f"{current_xp_in_level} / 500 XP to next level")
@@ -113,7 +108,7 @@ with st.sidebar:
     menu = st.radio("Navigation", ["🏠 Dashboard", "🔍 Smart Scan", "📚 Eco-Library"])
     
     st.markdown("---")
-    st.info("💡 **Daily Tip:** Washing clothes in cold water reduces energy use by 90%.")
+    st.info("💡 **Tip:** Washing clothes in cold water reduces energy use by 90%.")
 
 # ================= PAGE 1: DASHBOARD =================
 if menu == "🏠 Dashboard":
@@ -139,8 +134,15 @@ if menu == "🏠 Dashboard":
 
     with col_chart:
         st.markdown("### 📊 Wardrobe Analysis")
-        # Donut Chart for Material Types
+        
+        # Create DataFrame
         df = pd.DataFrame(st.session_state.history)
+        
+        # FAILSAFE: Ensure 'Type' column exists to prevent crash
+        if 'Type' not in df.columns:
+            df['Type'] = "Unknown"
+
+        # Donut Chart
         fig = px.pie(df, names='Type', values='Score', hole=0.6, color_discrete_sequence=px.colors.qualitative.Pastel2)
         fig.update_layout(showlegend=True, height=300, margin=dict(l=0,r=0,t=0,b=0), paper_bgcolor='rgba(0,0,0,0)')
         
@@ -170,7 +172,6 @@ elif menu == "🔍 Smart Scan":
     col_cam, col_results = st.columns([1, 1.5])
 
     with col_cam:
-        # UX: Use a container to frame the camera nicely
         st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
         picture = st.camera_input("Activate Scanner", label_visibility="collapsed")
         st.caption("Auto-detects: Material, Origin, Brand")
@@ -178,7 +179,6 @@ elif menu == "🔍 Smart Scan":
 
     if picture:
         with col_results:
-            # Simulation of "Processing" (Great for UX)
             with st.status("🤖 AI Analysis in progress...", expanded=True) as status:
                 st.write("🔍 Identifying fabric texture...")
                 time.sleep(1)
@@ -194,7 +194,7 @@ elif menu == "🔍 Smart Scan":
             score_labor = random.randint(50, 95)
             total_score = int((score_water + score_carbon + score_labor) / 3)
             
-            # THE RADAR CHART (The "Pro" Visual)
+            # THE RADAR CHART
             categories = ['Water Usage', 'Carbon Footprint', 'Labor Ethics', 'Recyclability', 'Durability']
             r_values = [score_water, score_carbon, score_labor, random.randint(40,80), random.randint(50,90)]
             
@@ -214,14 +214,13 @@ elif menu == "🔍 Smart Scan":
                 paper_bgcolor='rgba(0,0,0,0)'
             )
 
-            # Display Results Card
+            # Display Results
             st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
             c1, c2 = st.columns([2, 1])
             with c1:
                 st.subheader("Cotton Blend Hoodie")
                 st.caption("Brand: UrbanWear • Origin: Vietnam")
             with c2:
-                # Color code the score
                 color = "green" if total_score > 75 else "orange" if total_score > 50 else "red"
                 st.markdown(f"<h1 style='color:{color}; text-align:right;'>{total_score}/100</h1>", unsafe_allow_html=True)
             
@@ -232,12 +231,12 @@ elif menu == "🔍 Smart Scan":
                     "Name": "Cotton Blend Hoodie", "Brand": "UrbanWear", "Score": total_score, "Type": "Cotton"
                 })
                 add_xp(50)
+                st.rerun() # Refresh to show updated XP
             
             st.markdown("</div>", unsafe_allow_html=True)
 
     else:
         with col_results:
-            # Empty state animation
             if lottie_scan:
                 st_lottie(lottie_scan, height=300)
             st.info("👈 Waiting for image capture...")
