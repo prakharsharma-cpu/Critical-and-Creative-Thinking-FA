@@ -72,10 +72,3 @@ Color-based cues for sustainable choices
 Visual confirmation instead of haptics (prototype level)
 
 ⚠️ Note: This is a functional prototype, not a production-grade scanning system.
-
-👤 Author
-
-Prakhar Kapil Sharma
-Candidate Registration No: 1000260
-Course: IADAI203 – Artificial Intelligence
-School: Ryan Global School, Kharghar
