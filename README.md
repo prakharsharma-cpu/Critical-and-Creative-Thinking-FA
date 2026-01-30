@@ -19,11 +19,8 @@ This project was developed as part of Course 3: Critical and Creative Thinking (
 🎯 Objectives
 
 Convert eco-conscious ideas into an interactive digital prototype
-
 Apply UI/UX principles such as accessibility, visual hierarchy, and navigation
-
 Design core features that promote sustainable consumerism
-
 Incorporate feedback-driven, iterative design thinking
 
 🧠 Design Philosophy
@@ -31,24 +28,19 @@ Incorporate feedback-driven, iterative design thinking
 The app follows a Minimalist Green Aesthetic aligned with its environmental mission:
 
 Visual Hierarchy: Clear, large eco-scores for instant understanding
-
 Consistency: Emerald green, soft white, and slate gray color palette
-
 Affordance: Rounded buttons with subtle shadows for clarity
-
 Accessibility: Clean layouts and readable typography
 
 ✨ Core Features
 🏠 Dashboard
 
 Displays current GreenPoints
-
 Shows recent sustainable purchase summaries
 
 📷 Smart Scan (Simulated Barcode Scanner)
 
 Camera-style UI with overlay grid
-
 Mimics real-time product scanning
 
 🌱 Eco-Score System
@@ -58,35 +50,25 @@ Product rating from A to E
 Based on:
 
 Carbon footprint
-
 Water usage
-
 Material recyclability
 
 🎁 GreenPoints Rewards
 
 Gamified reward system
-
 Encourages eco-friendly purchasing habits
-
 Redeemable for sustainable brand discounts (conceptual)
 
 🧩 Screen Flow
 Dashboard → Scanner → Product Eco-Details → GreenPoints Rewards
-
-
 Designed for fast-paced retail environments with minimal friction.
 
 🛠️ Technical Implementation
 
 Framework: Streamlit (Python)
-
 UI Navigation: Bottom navigation bar
-
 Feedback Mechanism:
-
 Color-based cues for sustainable choices
-
 Visual confirmation instead of haptics (prototype level)
 
 ⚠️ Note: This is a functional prototype, not a production-grade scanning system.
@@ -94,9 +76,6 @@ Visual confirmation instead of haptics (prototype level)
 👤 Author
 
 Prakhar Kapil Sharma
-
 Candidate Registration No: 1000260
-
 Course: IADAI203 – Artificial Intelligence
-
 School: Ryan Global School, Kharghar
