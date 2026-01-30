@@ -6,10 +6,11 @@ import requests
 from streamlit_lottie import st_lottie
 import time
 import random
+from datetime import date
 
 # ---------------- CONFIGURATION ----------------
 st.set_page_config(
-    page_title="SustainStyle • Eco-Scanner",
+    page_title="SustainStyle Pro",
     page_icon="🌿",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -23,225 +24,245 @@ def load_lottieurl(url: str):
         return r.json()
     except: return None
 
-# Load Eco Animations
-lottie_plant = load_lottieurl("https://assets10.lottiefiles.com/packages/lf20_calmz.json") # Reusing a calm animation
-lottie_scan = load_lottieurl("https://assets5.lottiefiles.com/packages/lf20_m6cu968e.json") # Scanning animation
+# Load Animations
+lottie_earth = load_lottieurl("https://assets5.lottiefiles.com/packages/lf20_sO4cnC.json")
+lottie_scan = load_lottieurl("https://assets9.lottiefiles.com/packages/lf20_w51pcehl.json")
 
-# Custom CSS (Green/Eco Theme)
+# Custom CSS: "Glassmorphism & Nature" Theme
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap');
     
     html, body, [class*="css"] {
-        font-family: 'Poppins', sans-serif; 
-        background-color: #f0fdf4; /* Very light green bg */
+        font-family: 'Outfit', sans-serif; 
+        background-color: #f1f8f5; /* Soft Mint Background */
     }
     
-    /* Eco Card Styling */
-    .eco-card {
-        background: white;
-        border: 1px solid #dcfce7;
-        padding: 20px;
-        border-radius: 15px;
-        box-shadow: 0 4px 6px -1px rgba(0, 100, 0, 0.05);
-        transition: transform 0.2s;
-        margin-bottom: 1rem;
+    /* The Glass Card Effect */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 24px;
+        border-radius: 20px;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        margin-bottom: 20px;
+        transition: transform 0.3s ease;
     }
-    .eco-card:hover {
+    
+    .glass-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 10px 15px -3px rgba(0, 100, 0, 0.1);
-        border-color: #22c55e;
+        border-left: 5px solid #10b981; /* Green accent on hover */
     }
-    
-    /* Custom headings */
-    h1, h2, h3 { color: #166534; }
-    
-    /* Highlight text */
-    .highlight { color: #15803d; font-weight: bold; }
-    
-    /* Camera Input Styling Fix */
-    div[data-testid="stCameraInput"] {
-        border: 2px dashed #22c55e;
-        border-radius: 15px;
-        padding: 10px;
+
+    /* Metric Styling */
+    .big-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #064e3b;
+    }
+    .label {
+        color: #64748b;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Sidebar Clean Up */
+    section[data-testid="stSidebar"] {
+        background-color: #ffffff;
+        border-right: 1px solid #e2e8f0;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------- SESSION STATE & GAMIFICATION ----------------
-if "green_points" not in st.session_state: st.session_state.green_points = 2450
-if "eco_level" not in st.session_state: st.session_state.eco_level = 5
+# ---------------- SESSION STATE ----------------
+if "user_xp" not in st.session_state: st.session_state.user_xp = 1250
+if "user_level" not in st.session_state: st.session_state.user_level = 3
 if "history" not in st.session_state: 
+    # Dummy history
     st.session_state.history = [
-        {"Name": "Organic Cotton Tee", "Brand": "EcoWear", "Score": 85, "Date": "Today"},
-        {"Name": "Recycled Denim", "Brand": "GreenThreads", "Score": 72, "Date": "Yesterday"}
+        {"Name": "Vintage Levi's", "Brand": "Levi's", "Score": 88, "Type": "Denim"},
+        {"Name": "Fast Fashion Tee", "Brand": "H&M", "Score": 45, "Type": "Cotton"},
+        {"Name": "Patagonia Fleece", "Brand": "Patagonia", "Score": 92, "Type": "Synthetic"}
     ]
 
-# Leveling Logic
-def check_level_up():
-    new_level = 1 + (st.session_state.green_points // 500)
-    if new_level > st.session_state.eco_level:
+# Gamification Logic
+def add_xp(amount):
+    st.session_state.user_xp += amount
+    # Level up logic: Level up every 500 XP
+    new_level = 1 + (st.session_state.user_xp // 500)
+    if new_level > st.session_state.user_level:
+        st.session_state.user_level = new_level
         st.balloons()
-        st.toast(f"🌱 Leveled Up! You are now an Eco-Guardian Lvl {new_level}!")
-    st.session_state.eco_level = new_level
+        st.toast(f"🎉 Level Up! Welcome to Level {new_level}!", icon="🌿")
 
-# ---------------- SIDEBAR ----------------
+# ---------------- SIDEBAR PROFILE ----------------
 with st.sidebar:
-    st.title("SustainStyle 🌿")
-    st.write(f"### 👤 Eco-Warrior Lvl {st.session_state.eco_level}")
+    st.image("https://cdn-icons-png.flaticon.com/512/4333/4333609.png", width=60)
+    st.write(f"### Sustainability Profile")
+    st.write(f"**Level {st.session_state.user_level} Eco-Guardian**")
     
-    # Progress Bar
-    points_to_next = 500 - (st.session_state.green_points % 500)
-    prog = (st.session_state.green_points % 500) / 500
-    st.progress(prog)
-    st.caption(f"{st.session_state.green_points} GP • {points_to_next} to next level")
-    
-    st.markdown("---")
-    menu = st.radio("Menu", ["🏠 Dashboard", "📷 Scan Barcode", "🏆 Leaderboard"])
+    # Custom Progress Bar
+    current_xp_in_level = st.session_state.user_xp % 500
+    st.progress(current_xp_in_level / 500)
+    st.caption(f"{current_xp_in_level} / 500 XP to next level")
     
     st.markdown("---")
-    st.info("💡 **Tip:** Look for the 'Fair Trade' logo on tags!")
+    menu = st.radio("Navigation", ["🏠 Dashboard", "🔍 Smart Scan", "📚 Eco-Library"])
+    
+    st.markdown("---")
+    st.info("💡 **Daily Tip:** Washing clothes in cold water reduces energy use by 90%.")
 
-# ---------------- PAGE 1: DASHBOARD ----------------
+# ================= PAGE 1: DASHBOARD =================
 if menu == "🏠 Dashboard":
-    st.title("Your Impact Dashboard")
+    st.title(f"Hello, Green Hero 👋")
+    st.markdown("Here is your impact summary.")
+
+    # Top Metrics Row
+    c1, c2, c3, c4 = st.columns(4)
     
-    # Top Stats
-    c1, c2, c3 = st.columns(3)
+    avg_score = sum(x['Score'] for x in st.session_state.history) / len(st.session_state.history)
+    
     with c1:
-        st.markdown(f"<div class='eco-card'><h3>{len(st.session_state.history)}</h3><p>Items Scanned</p></div>", unsafe_allow_html=True)
+        st.markdown(f"""<div class='glass-card'><div class='big-number'>{len(st.session_state.history)}</div><div class='label'>Items Saved</div></div>""", unsafe_allow_html=True)
     with c2:
-        st.markdown(f"<div class='eco-card'><h3>{st.session_state.green_points}</h3><p>Green Points</p></div>", unsafe_allow_html=True)
+        st.markdown(f"""<div class='glass-card'><div class='big-number'>{int(avg_score)}</div><div class='label'>Avg Eco Score</div></div>""", unsafe_allow_html=True)
     with c3:
-        avg_score = sum(i['Score'] for i in st.session_state.history) / len(st.session_state.history)
-        st.markdown(f"<div class='eco-card'><h3>{avg_score:.0f}/100</h3><p>Avg Wardrobe Score</p></div>", unsafe_allow_html=True)
+        st.markdown(f"""<div class='glass-card'><div class='big-number'>{st.session_state.user_xp}</div><div class='label'>Total XP</div></div>""", unsafe_allow_html=True)
+    with c4:
+        st.markdown(f"""<div class='glass-card'><div class='big-number'>12kg</div><div class='label'>CO2 Avoided</div></div>""", unsafe_allow_html=True)
 
-    col_main, col_hist = st.columns([2, 1])
-    
-    with col_main:
-        st.markdown("### 📉 Sustainability Trends")
-        # Dummy Data for Trend
-        chart_data = pd.DataFrame({
-            "Date": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-            "EcoScore": [60, 65, 70, 68, 85, 90, 88]
-        })
-        fig = px.area(chart_data, x="Date", y="EcoScore", color_discrete_sequence=["#22c55e"])
-        fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", height=250)
+    # Main Visuals
+    col_chart, col_recent = st.columns([2, 1])
+
+    with col_chart:
+        st.markdown("### 📊 Wardrobe Analysis")
+        # Donut Chart for Material Types
+        df = pd.DataFrame(st.session_state.history)
+        fig = px.pie(df, names='Type', values='Score', hole=0.6, color_discrete_sequence=px.colors.qualitative.Pastel2)
+        fig.update_layout(showlegend=True, height=300, margin=dict(l=0,r=0,t=0,b=0), paper_bgcolor='rgba(0,0,0,0)')
+        
+        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
         st.plotly_chart(fig, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    with col_hist:
-        st.markdown("### 🕒 Recent Scans")
+    with col_recent:
+        st.markdown("### 🕒 Recent Activity")
         for item in st.session_state.history[-3:]:
+            color = "#10b981" if item['Score'] > 70 else "#f59e0b"
             st.markdown(f"""
-            <div class='eco-card' style='padding:10px;'>
-                <b>{item['Name']}</b><br>
-                <span style='color:grey; font-size:0.8em'>{item['Brand']}</span>
-                <span style='float:right; color:{'green' if item['Score']>80 else 'orange'}; font-weight:bold'>{item['Score']}</span>
+            <div class='glass-card' style='padding: 15px; margin-bottom: 10px;'>
+                <div style='display:flex; justify-content:space-between;'>
+                    <b>{item['Name']}</b>
+                    <span style='color:{color}; font-weight:bold;'>{item['Score']}</span>
+                </div>
+                <div style='font-size:0.8rem; color:#888;'>{item['Brand']}</div>
             </div>
             """, unsafe_allow_html=True)
 
-# ---------------- PAGE 2: BARCODE SCANNER ----------------
-elif menu == "📷 Scan Barcode":
-    st.title("Scan & Analyze")
-    st.write("Point your camera at the clothing tag/barcode.")
+# ================= PAGE 2: SMART SCANNER =================
+elif menu == "🔍 Smart Scan":
+    st.title("AI Fabric Scanner")
+    st.write("Point your camera at a garment tag to analyze its environmental footprint.")
 
-    col_cam, col_result = st.columns([1, 1])
+    col_cam, col_results = st.columns([1, 1.5])
 
     with col_cam:
-        # CAMERA INPUT
-        img_buffer = st.camera_input("Scanner Active", label_visibility="collapsed")
-        
-        if not img_buffer:
-            if lottie_scan:
-                st_lottie(lottie_scan, height=200, key="scan_anim")
-            st.info("Waiting for barcode...")
+        # UX: Use a container to frame the camera nicely
+        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+        picture = st.camera_input("Activate Scanner", label_visibility="collapsed")
+        st.caption("Auto-detects: Material, Origin, Brand")
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    # LOGIC: Simulating a scan result when an image is taken
-    if img_buffer is not None:
-        with col_result:
-            with st.spinner("Decoding Barcode & Analyzing Supply Chain..."):
-                time.sleep(2) # Cosmetic delay for realism
-                
-                # Randomized Mock Data for Demo
-                score = random.randint(40, 95)
-                water_usage = random.randint(30, 90)
-                carbon = random.randint(20, 80)
-                ethics = random.randint(50, 100)
-                
-                detected_item = random.choice(["Denim Jeans", "Polyester Jacket", "Hemp Shirt", "Wool Sweater"])
-                brand_name = random.choice(["FastFashionCo", "GreenThread", "EarthWear", "UrbanBasic"])
+    if picture:
+        with col_results:
+            # Simulation of "Processing" (Great for UX)
+            with st.status("🤖 AI Analysis in progress...", expanded=True) as status:
+                st.write("🔍 Identifying fabric texture...")
+                time.sleep(1)
+                st.write("🌍 Tracing supply chain...")
+                time.sleep(1)
+                st.write("📊 Calculating carbon footprint...")
+                time.sleep(0.5)
+                status.update(label="Analysis Complete!", state="complete", expanded=False)
 
-            # RESULT CARD
-            st.markdown(f"<div class='eco-card'>", unsafe_allow_html=True)
-            st.subheader(f"{detected_item}")
-            st.caption(f"Brand: {brand_name} • ID: 89340012")
+            # Generate Mock Data
+            score_water = random.randint(30, 90)
+            score_carbon = random.randint(30, 90)
+            score_labor = random.randint(50, 95)
+            total_score = int((score_water + score_carbon + score_labor) / 3)
             
-            # Gauge Chart for Overall Score
-            fig_gauge = go.Figure(go.Indicator(
-                mode = "gauge+number",
-                value = score,
-                title = {'text': "Eco Score"},
-                gauge = {
-                    'axis': {'range': [None, 100]},
-                    'bar': {'color': "#15803d"},
-                    'steps': [
-                        {'range': [0, 50], 'color': "#fca5a5"},
-                        {'range': [50, 80], 'color': "#fde047"},
-                        {'range': [80, 100], 'color': "#86efac"}
-                    ]
-                }
+            # THE RADAR CHART (The "Pro" Visual)
+            categories = ['Water Usage', 'Carbon Footprint', 'Labor Ethics', 'Recyclability', 'Durability']
+            r_values = [score_water, score_carbon, score_labor, random.randint(40,80), random.randint(50,90)]
+            
+            fig = go.Figure()
+            fig.add_trace(go.Scatterpolar(
+                r=r_values,
+                theta=categories,
+                fill='toself',
+                name='Product Score',
+                line_color='#10b981'
             ))
-            fig_gauge.update_layout(height=200, margin=dict(l=20,r=20,t=0,b=0))
-            st.plotly_chart(fig_gauge, use_container_width=True)
+            fig.update_layout(
+                polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
+                showlegend=False,
+                height=300,
+                margin=dict(l=40, r=40, t=20, b=20),
+                paper_bgcolor='rgba(0,0,0,0)'
+            )
+
+            # Display Results Card
+            st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+            c1, c2 = st.columns([2, 1])
+            with c1:
+                st.subheader("Cotton Blend Hoodie")
+                st.caption("Brand: UrbanWear • Origin: Vietnam")
+            with c2:
+                # Color code the score
+                color = "green" if total_score > 75 else "orange" if total_score > 50 else "red"
+                st.markdown(f"<h1 style='color:{color}; text-align:right;'>{total_score}/100</h1>", unsafe_allow_html=True)
             
-            # Detailed Metrics
-            c_a, c_b, c_c = st.columns(3)
-            c_a.metric("Water", f"{water_usage}/100", help="Water consumption during manufacturing")
-            c_b.metric("Carbon", f"{carbon}/100", help="CO2 emitted during transport")
-            c_c.metric("Labor", f"{ethics}/100", help="Ethical labor practices score")
+            st.plotly_chart(fig, use_container_width=True)
             
-            # Action Button
-            if st.button("✅ Add to Wardrobe (+50 XP)"):
-                new_entry = {"Name": detected_item, "Brand": brand_name, "Score": score, "Date": "Just now"}
-                st.session_state.history.append(new_entry)
-                st.session_state.green_points += 50
-                check_level_up()
-                st.toast("Added successfully!")
+            if st.button("✅ Add to Wardrobe (+50 XP)", type="primary"):
+                st.session_state.history.append({
+                    "Name": "Cotton Blend Hoodie", "Brand": "UrbanWear", "Score": total_score, "Type": "Cotton"
+                })
+                add_xp(50)
             
             st.markdown("</div>", unsafe_allow_html=True)
-            
-            # Suggestion Logic
-            if score < 60:
-                st.warning(f"⚠️ **Alternative:** This item has a high carbon footprint. Try looking for {detected_item} made from Recycled Polyester instead.")
 
-# ---------------- PAGE 3: LEADERBOARD ----------------
-elif menu == "🏆 Leaderboard":
-    st.title("Community Leaderboard")
+    else:
+        with col_results:
+            # Empty state animation
+            if lottie_scan:
+                st_lottie(lottie_scan, height=300)
+            st.info("👈 Waiting for image capture...")
+
+# ================= PAGE 3: LIBRARY =================
+elif menu == "📚 Eco-Library":
+    st.title("Sustainable Alternatives")
     
-    st.markdown("<div class='eco-card'>", unsafe_allow_html=True)
-    st.write("See how you stack up against other Eco-Warriors in your area.")
+    st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+    st.subheader("Based on your scans, try these:")
     
-    leader_data = pd.DataFrame({
-        "Rank": [1, 2, 3, 4, 5],
-        "User": ["Sarah_Green", "EcoMike", "You (Admin)", "CleanLife", "SustainableSam"],
-        "Level": [12, 10, st.session_state.eco_level, 4, 3],
-        "Points": [6500, 5200, st.session_state.green_points, 1800, 1200]
-    })
+    col_a, col_b, col_c = st.columns(3)
     
-    # Simple formatting
-    st.dataframe(
-        leader_data, 
-        hide_index=True, 
-        use_container_width=True,
-        column_config={
-            "Rank": st.column_config.NumberColumn(format="🏆 %d"),
-            "Points": st.column_config.ProgressColumn(
-                "Green Points", format="%d", min_value=0, max_value=7000
-            )
-        }
-    )
+    with col_a:
+        st.image("https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=300&q=80", use_container_width=True)
+        st.write("**Hemp Fabric**")
+        st.caption("Uses 50% less water than cotton.")
+        
+    with col_b:
+        st.image("https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=300&q=80", use_container_width=True)
+        st.write("**Organic Linen**")
+        st.caption("Biodegradable and durable.")
+        
+    with col_c:
+        st.image("https://images.unsplash.com/photo-1542272617-08f086302542?auto=format&fit=crop&w=300&q=80", use_container_width=True)
+        st.write("**Tencel / Lyocell**")
+        st.caption("Made from sustainably sourced wood.")
     st.markdown("</div>", unsafe_allow_html=True)
-
-# ---------------- FOOTER ----------------
-st.markdown("---")
-st.markdown("<center style='color: #166534'>SustainStyle • Scan Good, Look Good, Do Good.</center>", unsafe_allow_html=True)
